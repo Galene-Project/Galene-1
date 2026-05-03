@@ -1,281 +1,462 @@
 import React, { useState, useEffect } from 'react';
 
+const createProduct = (id, nome, cat, sub = '') => ({
+  id,
+  nome,
+  cat,
+  sub,
+  preco: 89.90 + Math.floor(id / 5) * 5,
+  destaque: id % 5 === 0,
+  tag: id % 7 === 0 ? 'Destaque' : '',
+  cores: ['Preto', 'Branco', 'Azul', id % 3 === 0 ? 'Vermelho' : 'Rosa'],
+  tamanhos: ['P', 'M', 'G', 'GG'],
+  desc: `${nome} é uma peça elegante e confortável da coleção Galene. Ideal para o dia a dia.`,
+  foto: `https://via.placeholder.com/250x350/6c5ce7/ffffff?text=${nome.replace(/\s+/g, '+')}`
+});
+
 const AdminPage = () => {
-  const initialFormData = {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [loginUsername, setLoginUsername] = useState('');
+  const [loginPassword, setLoginPassword] = useState('');
+  const [products, setProducts] = useState([]);
+  const [editingProduct, setEditingProduct] = useState(null);
+  const [showForm, setShowForm] = useState(false);
+  const defaultFormData = {
+    id: '',
     nome: '',
     cat: '',
-    sub: 'Casual',
+    sub: '',
     preco: '',
-    desconto: '',
     destaque: false,
     tag: '',
-    cores: '',
-    tamanhos: '',
+    cores: [],
+    tamanhos: [],
     desc: '',
     foto: ''
   };
-
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  const [products, setProducts] = useState([]);
-  const [editingProduct, setEditingProduct] = useState(null);
-  const [formData, setFormData] = useState(initialFormData);
-
-  const saveProducts = (prods) => {
-    localStorage.setItem('galeneProducts', JSON.stringify(prods));
-    setProducts(prods);
-  };
-
-  const loadProducts = () => {
-    const savedProducts = localStorage.getItem('galeneProducts');
-    if (!savedProducts) {
-      const productNames = [
-        'Vestido Bella', 'Vestido Eva', 'Vestido Safira', 'Vestido Naomi', 'Vestido Mara',
-        'Vestido Ariel', 'Vestido Nina', 'Vestido Lola', 'Conjunto Dallas', 'Conjunto Dani',
-        'Macacão Kami', 'Blusa Caja', 'Regata Ellen', 'Cardigan Canelado', 'Calça Pantalona',
-        'Vestido Atenas', 'Vestido Brisa', 'Vestido Luana', 'Vestido Treviso', 'Vestido Lisa'
-      ];
-      const initialProducts = productNames.map((nome, i) => {
-        const id = i + 1;
-        let cat = 'Vestidos';
-        if (nome.includes('Conjunto')) cat = 'Conjuntos';
-        else if (nome.includes('Macacão')) cat = 'Macacões';
-        else if (nome.includes('Blusa')) cat = 'Blusas';
-        else if (nome.includes('Regata')) cat = 'Regatas';
-        else if (nome.includes('Cardigan')) cat = 'Cardigans';
-        else if (nome.includes('Calça')) cat = 'Calças';
-        const fotoText = nome.replace(/ /g, '+');
-        return {
-          id,
-          nome,
-          cat,
-          sub: 'Casual',
-          preco: 150 + (id * 2.5),
-          desconto: id % 5 === 0 ? 20 : 0,
-          destaque: id % 2 === 0,
-          tag: id % 3 === 0 ? 'Novo' : '',
-          cores: ['Preto', 'Branco', id > 10 ? 'Azul' : 'Vermelho'],
-          tamanhos: ['P', 'M', 'G', 'GG'],
-          desc: `Descrição do ${nome}. Produto de alta qualidade.`,
-          foto: `https://via.placeholder.com/300x400/FF69B4/FFFFFF?text=${fotoText}`
-        };
-      });
-      localStorage.setItem('galeneProducts', JSON.stringify(initialProducts));
-      setProducts(initialProducts);
-    } else {
-      setProducts(JSON.parse(savedProducts));
-    }
-  };
+  const [formData, setFormData] = useState(defaultFormData);
 
   useEffect(() => {
-    if (isAuthenticated) {
-      loadProducts();
+    let stored = localStorage.getItem('galeneProducts');
+    if (stored) {
+      setProducts(JSON.parse(stored));
+    } else {
+      const initialProducts = [];
+      let currentId = 1;
+
+      // Blusas
+      ['Caja', 'Bagda', 'Julia', 'Yasmin'].forEach(nome => {
+        initialProducts.push(createProduct(currentId++, nome, 'Blusas'));
+      });
+
+      // Regatas
+      ['Ellen'].forEach(nome => {
+        initialProducts.push(createProduct(currentId++, nome, 'Regatas'));
+      });
+
+      // Cardigans
+      ['Canelado', 'Luxor'].forEach(nome => {
+        initialProducts.push(createProduct(currentId++, nome, 'Cardigans'));
+      });
+
+      // Conjuntos
+      ['Dallas', 'Dani', 'Tiffany', 'Tiffany Moletinho', 'Chantal Calça', 'Chantal'].forEach(nome => {
+        initialProducts.push(createProduct(currentId++, nome, 'Conjuntos'));
+      });
+
+      // Macacões
+      ['Kami'].forEach(nome => {
+        initialProducts.push(createProduct(currentId++, nome, 'Macacões'));
+      });
+
+      // Calças
+      ['Pantalona'].forEach(nome => {
+        initialProducts.push(createProduct(currentId++, nome, 'Calças'));
+      });
+
+      // Vestidos Viscolaycra (33 to total 48)
+      ['Bella', 'Eva', 'Safira', 'Naomi', 'Mara', 'Ariel', 'Nina', 'Atenas', 'Brisa', 'Luana', 'Treviso', 'Lisa', 'Rio', 'Giane', 'Paty', 'Star', 'Elisa', 'Caja', 'Listrado', 'Modena', 'Tami', 'Camila', 'Azaleia', 'Ellen', 'Pamela', 'Mia', 'Saara', 'Rafa', 'Clara', 'Rubi', 'Milano', 'Kim', 'Nicole'].forEach(nome => {
+        initialProducts.push(createProduct(currentId++, nome, 'Vestidos', 'Viscolaycra'));
+      });
+
+      setProducts(initialProducts);
+      localStorage.setItem('galeneProducts', JSON.stringify(initialProducts));
     }
-  }, [isAuthenticated]);
+  }, []);
+
+  useEffect(() => {
+    if (products.length > 0) {
+      localStorage.setItem('galeneProducts', JSON.stringify(products));
+    }
+  }, [products]);
 
   const handleLogin = (e) => {
     e.preventDefault();
-    if (username === 'admin' && password === '1234') {
+    if (loginUsername === 'admin' && loginPassword === '1234') {
       setIsAuthenticated(true);
-      setUsername('');
-      setPassword('');
     } else {
-      alert('Credenciais inválidas! Use: admin / 1234');
+      alert('Credenciais inválidas!');
     }
+  };
+
+  const handleLogout = () => {
+    setIsAuthenticated(false);
+    setLoginUsername('');
+    setLoginPassword('');
+  };
+
+  const toggleForm = () => {
+    setShowForm(!showForm);
+    setEditingProduct(null);
+    setFormData(defaultFormData);
   };
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: type === 'checkbox' ? checked : value
-    }));
-  };
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    const prodData = {
-      nome: formData.nome,
-      cat: formData.cat,
-      sub: formData.sub,
-      preco: parseFloat(formData.preco) || 0,
-      desconto: parseInt(formData.desconto) || 0,
-      destaque: formData.destaque === true,
-      tag: formData.tag,
-      cores: formData.cores ? formData.cores.split(',').map(c => c.trim()).filter(Boolean) : [],
-      tamanhos: formData.tamanhos ? formData.tamanhos.split(',').map(t => t.trim()).filter(Boolean) : [],
-      desc: formData.desc,
-      foto: formData.foto
-    };
-
-    let updatedProducts;
-    if (editingProduct) {
-      prodData.id = editingProduct.id;
-      updatedProducts = products.map(p => p.id === editingProduct.id ? prodData : p);
+    if (['cores', 'tamanhos'].includes(name)) {
+      const arr = value.split(',').map(s => s.trim()).filter(s => s);
+      setFormData(prev => ({ ...prev, [name]: arr }));
+    } else if (type === 'checkbox') {
+      setFormData(prev => ({ ...prev, [name]: checked }));
     } else {
-      prodData.id = products.length > 0 ? Math.max(...products.map(p => p.id)) + 1 : 1;
-      updatedProducts = [...products, prodData];
+      setFormData(prev => ({ ...prev, [name]: value }));
     }
-    saveProducts(updatedProducts);
-    setFormData(initialFormData);
-    setEditingProduct(null);
   };
 
-  const editProduct = (prod) => {
-    setEditingProduct(prod);
-    setFormData({
-      nome: prod.nome,
-      cat: prod.cat,
-      sub: prod.sub,
-      preco: prod.preco,
-      desconto: prod.desconto,
-      destaque: prod.destaque,
-      tag: prod.tag,
-      cores: prod.cores.join(', '),
-      tamanhos: prod.tamanhos.join(', '),
-      desc: prod.desc,
-      foto: prod.foto
-    });
+  const addProduct = (e) => {
+    e.preventDefault();
+    const newId = products.length ? Math.max(...products.map(p => p.id)) + 1 : 1;
+    const newProduct = { ...formData, id: newId, preco: parseFloat(formData.preco) || 0 };
+    setProducts([...products, newProduct]);
+    setShowForm(false);
+    setFormData(defaultFormData);
+  };
+
+  const updateProduct = (e) => {
+    e.preventDefault();
+    const updatedProduct = { ...formData, id: editingProduct.id, preco: parseFloat(formData.preco) || 0 };
+    setProducts(products.map(p => p.id === editingProduct.id ? updatedProduct : p));
+    setEditingProduct(null);
+    setShowForm(false);
+    setFormData(defaultFormData);
   };
 
   const deleteProduct = (id) => {
-    if (confirm('Tem certeza que deseja deletar este produto?')) {
-      const updated = products.filter(p => p.id !== id);
-      saveProducts(updated);
+    if (confirm('Tem certeza que deseja excluir este produto?')) {
+      setProducts(products.filter(p => p.id !== id));
+    }
+  };
+
+  const editProduct = (product) => {
+    setEditingProduct(product);
+    setFormData({ ...product });
+    setShowForm(true);
+  };
+
+  const styles = {
+    container: {
+      padding: '20px',
+      fontFamily: 'Arial, sans-serif',
+      maxWidth: '100vw',
+      backgroundColor: '#fff'
+    },
+    loginContainer: {
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+      minHeight: '50vh',
+      padding: '20px'
+    },
+    loginForm: {
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '15px',
+      width: '100%',
+      maxWidth: '300px'
+    },
+    input: {
+      padding: '12px',
+      border: '1px solid #ddd',
+      borderRadius: '4px',
+      fontSize: '16px',
+      boxSizing: 'border-box'
+    },
+    btn: {
+      padding: '10px 20px',
+      backgroundColor: '#007bff',
+      color: 'white',
+      border: 'none',
+      borderRadius: '4px',
+      cursor: 'pointer',
+      fontSize: '16px',
+      marginBottom: '10px'
+    },
+    logoutBtn: {
+      padding: '10px 20px',
+      backgroundColor: '#6c757d',
+      color: 'white',
+      border: 'none',
+      borderRadius: '4px',
+      cursor: 'pointer',
+      fontSize: '16px',
+      marginBottom: '20px'
+    },
+    form: {
+      display: 'grid',
+      gap: '15px',
+      marginBottom: '30px',
+      padding: '25px',
+      border: '1px solid #ddd',
+      borderRadius: '8px',
+      backgroundColor: '#f9f9f9',
+      gridTemplateColumns: '1fr 1fr'
+    },
+    formFull: {
+      gridColumn: '1 / -1'
+    },
+    label: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: '10px',
+      fontWeight: 'bold'
+    },
+    tableContainer: {
+      overflowX: 'auto',
+      border: '1px solid #dee2e6',
+      borderRadius: '8px',
+      boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+    },
+    table: {
+      width: '100%',
+      borderCollapse: 'collapse',
+      minWidth: '1200px'
+    },
+    th: {
+      backgroundColor: '#f8f9fa',
+      padding: '15px 12px',
+      textAlign: 'left',
+      borderBottom: '2px solid #dee2e6',
+      position: 'sticky',
+      top: 0,
+      zIndex: 10,
+      fontWeight: 'bold',
+      whiteSpace: 'nowrap'
+    },
+    td: {
+      padding: '12px',
+      borderBottom: '1px solid #dee2e6',
+      verticalAlign: 'top'
+    },
+    img: {
+      width: '60px',
+      height: '80px',
+      objectFit: 'cover',
+      borderRadius: '4px',
+      border: '1px solid #eee'
+    },
+    editBtn: {
+      padding: '6px 12px',
+      backgroundColor: '#28a745',
+      color: 'white',
+      border: 'none',
+      borderRadius: '3px',
+      cursor: 'pointer',
+      fontSize: '14px',
+      marginRight: '5px'
+    },
+    delBtn: {
+      padding: '6px 12px',
+      backgroundColor: '#dc3545',
+      color: 'white',
+      border: 'none',
+      borderRadius: '3px',
+      cursor: 'pointer',
+      fontSize: '14px'
     }
   };
 
   if (!isAuthenticated) {
     return (
-      <div style={{ padding: '40px', maxWidth: '400px', margin: '0 auto', textAlign: 'center' }}>
-        <h2>Login Admin</h2>
-        <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-          <input
-            name="username"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            placeholder="Usuário"
-            style={{ padding: '10px', fontSize: '16px' }}
-            required
-          />
-          <input
-            name="password"
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="Senha"
-            style={{ padding: '10px', fontSize: '16px' }}
-            required
-          />
-          <button type="submit" style={{ padding: '10px', fontSize: '16px', background: '#007bff', color: 'white', border: 'none', cursor: 'pointer' }}>
-            Entrar
-          </button>
-        </form>
+      <div style={styles.container}>
+        <div style={styles.loginContainer}>
+          <h1 style={{ marginBottom: '30px', color: '#333' }}>Admin Login - Galene</h1>
+          <form onSubmit={handleLogin} style={styles.loginForm}>
+            <input
+              type="text"
+              placeholder="Usuário (admin)"
+              value={loginUsername}
+              onChange={(e) => setLoginUsername(e.target.value)}
+              style={styles.input}
+              required
+            />
+            <input
+              type="password"
+              placeholder="Senha (1234)"
+              value={loginPassword}
+              onChange={(e) => setLoginPassword(e.target.value)}
+              style={styles.input}
+              required
+            />
+            <button type="submit" style={styles.btn}>Entrar</button>
+          </form>
+        </div>
       </div>
     );
   }
 
-  return (
-    <div style={{ padding: '20px', maxWidth: '1400px', margin: '0 auto' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-        <h1>Admin - Produtos GALENE</h1>
-        <button
-          onClick={() => setIsAuthenticated(false)}
-          style={{ padding: '8px 16px', background: '#dc3545', color: 'white', border: 'none', cursor: 'pointer' }}
-        >
-          Sair
-        </button>
-      </div>
+  const coresValue = Array.isArray(formData.cores) ? formData.cores.join(', ') : '';
+  const tamanhosValue = Array.isArray(formData.tamanhos) ? formData.tamanhos.join(', ') : '';
 
-      <div style={{ marginBottom: '30px' }}>
-        <h2>{editingProduct ? `Editar ${editingProduct.nome}` : 'Adicionar Novo Produto'}</h2>
-        <form onSubmit={handleSubmit} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '10px', marginBottom: '20px' }}>
-          <input name="nome" value={formData.nome} onChange={handleInputChange} placeholder="Nome" style={{ padding: '8px' }} required />
-          <input name="cat" value={formData.cat} onChange={handleInputChange} placeholder="Categoria" style={{ padding: '8px' }} required />
-          <input name="sub" value={formData.sub} onChange={handleInputChange} placeholder="Subcategoria" style={{ padding: '8px' }} />
-          <input name="preco" type="number" step="0.01" value={formData.preco} onChange={handleInputChange} placeholder="Preço" style={{ padding: '8px' }} />
-          <input name="desconto" type="number" value={formData.desconto} onChange={handleInputChange} placeholder="Desconto %" style={{ padding: '8px' }} />
-          <label style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-            <input name="destaque" type="checkbox" checked={formData.destaque} onChange={handleInputChange} />
-            Destaque
-          </label>
-          <input name="tag" value={formData.tag} onChange={handleInputChange} placeholder="Tag" style={{ padding: '8px' }} />
-          <input name="cores" value={formData.cores} onChange={handleInputChange} placeholder="Cores (Preto, Branco)" style={{ padding: '8px' }} />
-          <input name="tamanhos" value={formData.tamanhos} onChange={handleInputChange} placeholder="Tamanhos (P, M, G)" style={{ padding: '8px' }} />
+  return (
+    <div style={styles.container}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+        <h1>Admin - Gerenciar Produtos Galene ({products.length} produtos)</h1>
+        <button onClick={handleLogout} style={styles.logoutBtn}>Logout</button>
+      </div>
+      <button onClick={toggleForm} style={styles.btn}>
+        {showForm ? 'Cancelar' : 'Adicionar Novo Produto'}
+      </button>
+      {showForm && (
+        <form
+          onSubmit={editingProduct ? updateProduct : addProduct}
+          style={styles.form}
+        >
+          <input
+            name="nome"
+            placeholder="Nome do Produto"
+            value={formData.nome}
+            onChange={handleInputChange}
+            style={styles.input}
+            required
+          />
+          <input
+            name="cat"
+            placeholder="Categoria"
+            value={formData.cat}
+            onChange={handleInputChange}
+            style={styles.input}
+            required
+          />
+          <input
+            name="sub"
+            placeholder="Subcategoria"
+            value={formData.sub}
+            onChange={handleInputChange}
+            style={styles.input}
+          />
+          <input
+            name="preco"
+            type="number"
+            step="0.01"
+            placeholder="Preço (R$)"
+            value={formData.preco}
+            onChange={handleInputChange}
+            style={styles.input}
+            required
+          />
+          <div style={styles.label}>
+            <label>Destaque:</label>
+            <input
+              name="destaque"
+              type="checkbox"
+              checked={formData.destaque}
+              onChange={handleInputChange}
+            />
+          </div>
+          <input
+            name="tag"
+            placeholder="Tag (ex: Novo)"
+            value={formData.tag}
+            onChange={handleInputChange}
+            style={styles.input}
+          />
+          <input
+            name="cores"
+            placeholder="Cores (separadas por vírgula)"
+            value={coresValue}
+            onChange={handleInputChange}
+            style={styles.input}
+          />
+          <input
+            name="tamanhos"
+            placeholder="Tamanhos (P,M,G,GG)"
+            value={tamanhosValue}
+            onChange={handleInputChange}
+            style={styles.input}
+          />
           <textarea
             name="desc"
+            placeholder="Descrição"
             value={formData.desc}
             onChange={handleInputChange}
-            placeholder="Descrição"
-            style={{ padding: '8px', gridColumn: '1 / -1', minHeight: '60px' }}
+            style={{ ...styles.input, minHeight: '80px', gridColumn: '1 / -1' }}
           />
-          <input name="foto" value={formData.foto} onChange={handleInputChange} placeholder="URL da foto" style={{ padding: '8px', gridColumn: '1 / -1' }} />
-          <button
-            type="submit"
-            style={{ padding: '10px', background: '#28a745', color: 'white', border: 'none', cursor: 'pointer', gridColumn: '1 / -1' }}
-          >
-            {editingProduct ? 'Atualizar' : 'Adicionar Produto'}
+          <input
+            name="foto"
+            placeholder="URL da Foto"
+            value={formData.foto}
+            onChange={handleInputChange}
+            style={{ ...styles.input, gridColumn: '1 / -1' }}
+          />
+          <button type="submit" style={{ ...styles.btn, gridColumn: '1 / -1' }}>
+            {editingProduct ? 'Atualizar Produto' : 'Adicionar Produto'}
           </button>
-          {editingProduct && (
-            <button
-              type="button"
-              onClick={() => {
-                setEditingProduct(null);
-                setFormData(initialFormData);
-              }}
-              style={{ padding: '10px', background: '#6c757d', color: 'white', border: 'none', cursor: 'pointer', gridColumn: '1 / -1' }}
-            >
-              Cancelar
-            </button>
-          )}
         </form>
-      </div>
-
-      <h2>Lista de Produtos ({products.length})</h2>
-      <table style={{ width: '100%', borderCollapse: 'collapse', border: '1px solid #ddd' }}>
-        <thead>
-          <tr style={{ backgroundColor: '#f8f9fa' }}>
-            <th style={{ border: '1px solid #ddd', padding: '12px', textAlign: 'left' }}>ID</th>
-            <th style={{ border: '1px solid #ddd', padding: '12px', textAlign: 'left' }}>Nome</th>
-            <th style={{ border: '1px solid #ddd', padding: '12px', textAlign: 'left' }}>Cat</th>
-            <th style={{ border: '1px solid #ddd', padding: '12px', textAlign: 'left' }}>Preço</th>
-            <th style={{ border: '1px solid #ddd', padding: '12px', textAlign: 'left' }}>Desconto</th>
-            <th style={{ border: '1px solid #ddd', padding: '12px', textAlign: 'left' }}>Destaque</th>
-            <th style={{ border: '1px solid #ddd', padding: '12px', textAlign: 'left' }}>Foto</th>
-            <th style={{ border: '1px solid #ddd', padding: '12px', textAlign: 'left' }}>Ações</th>
-          </tr>
-        </thead>
-        <tbody>
-          {products.map((prod) => (
-            <tr key={prod.id} style={{ borderBottom: '1px solid #ddd' }}>
-              <td style={{ border: '1px solid #ddd', padding: '12px' }}>{prod.id}</td>
-              <td style={{ border: '1px solid #ddd', padding: '12px' }}>{prod.nome}</td>
-              <td style={{ border: '1px solid #ddd', padding: '12px' }}>{prod.cat}</td>
-              <td style={{ border: '1px solid #ddd', padding: '12px' }}>R$ {prod.preco.toFixed(2)}</td>
-              <td style={{ border: '1px solid #ddd', padding: '12px' }}>{prod.desconto}%</td>
-              <td style={{ border: '1px solid #ddd', padding: '12px' }}>{prod.destaque ? 'Sim' : 'Não'}</td>
-              <td style={{ border: '1px solid #ddd', padding: '12px' }}>
-                <img src={prod.foto} alt={prod.nome} style={{ width: '60px', height: 'auto', borderRadius: '4px' }} />
-              </td>
-              <td style={{ border: '1px solid #ddd', padding: '12px' }}>
-                <button
-                  onClick={() => editProduct(prod)}
-                  style={{ margin: '2px', padding: '6px 12px', background: '#007bff', color: 'white', border: 'none', cursor: 'pointer', borderRadius: '4px' }}
-                >
-                  Editar
-                </button>
-                <button
-                  onClick={() => deleteProduct(prod.id)}
-                  style={{ margin: '2px', padding: '6px 12px', background: '#dc3545', color: 'white', border: 'none', cursor: 'pointer', borderRadius: '4px' }}
-                >
-                  Deletar
-                </button>
-              </td>
+      )}
+      <div style={styles.tableContainer}>
+        <table style={styles.table}>
+          <thead>
+            <tr>
+              <th style={styles.th}>ID</th>
+              <th style={styles.th}>Foto</th>
+              <th style={styles.th}>Nome</th>
+              <th style={styles.th}>Categoria</th>
+              <th style={styles.th}>Sub</th>
+              <th style={styles.th}>Preço</th>
+              <th style={styles.th}>Destaque</th>
+              <th style={styles.th}>Tag</th>
+              <th style={styles.th}>Cores</th>
+              <th style={styles.th}>Tamanhos</th>
+              <th style={styles.th}>Descrição</th>
+              <th style={styles.th}>Ações</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {products.map((p) => (
+              <tr key={p.id}>
+                <td style={styles.td}>{p.id}</td>
+                <td style={styles.td}>
+                  <img src={p.foto} alt={p.nome} style={styles.img} />
+                </td>
+                <td style={styles.td}>{p.nome}</td>
+                <td style={styles.td}>{p.cat}</td>
+                <td style={styles.td}>{p.sub}</td>
+                <td style={styles.td}>R$ {parseFloat(p.preco).toFixed(2)}</td>
+                <td style={styles.td}>{p.destaque ? 'Sim' : 'Não'}</td>
+                <td style={styles.td}>{p.tag}</td>
+                <td style={styles.td}>{p.cores.join(', ')}</td>
+                <td style={styles.td}>{p.tamanhos.join(', ')}</td>
+                <td style={styles.td}>{p.desc.substring(0, 50)}...</td>
+                <td style={styles.td}>
+                  <button
+                    onClick={() => editProduct(p)}
+                    style={styles.editBtn}
+                  >
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => deleteProduct(p.id)}
+                    style={styles.delBtn}
+                  >
+                    Delete
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 };

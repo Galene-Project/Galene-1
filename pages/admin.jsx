@@ -1,464 +1,361 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 
-const createProduct = (id, nome, cat, sub = '') => ({
-  id,
-  nome,
-  cat,
-  sub,
-  preco: 89.90 + Math.floor(id / 5) * 5,
-  destaque: id % 5 === 0,
-  tag: id % 7 === 0 ? 'Destaque' : '',
-  cores: ['Preto', 'Branco', 'Azul', id % 3 === 0 ? 'Vermelho' : 'Rosa'],
-  tamanhos: ['P', 'M', 'G', 'GG'],
-  desc: `${nome} é uma peça elegante e confortável da coleção Galene. Ideal para o dia a dia.`,
-  foto: `https://via.placeholder.com/250x350/6c5ce7/ffffff?text=${nome.replace(/\s+/g, '+')}`
-});
+const T = {
+  bg: "#FAFAF8", bg2: "#F4F1EC", bg3: "#EDE8E0", panel: "#FFFFFF",
+  border: "#E0D8CC", gold: "#B8935A", goldDk: "#8A6A38", goldLt: "#D4B07A",
+  goldXlt: "#F5EDD8", ink: "#1A1714", ink2: "#3A3530", ink3: "#6A6058",
+  ink4: "#9A9088", ruby: "#8B3A3A", jade: "#3A6B4A",
+};
 
-const AdminPage = () => {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [loginUsername, setLoginUsername] = useState('');
-  const [loginPassword, setLoginPassword] = useState('');
-  const [products, setProducts] = useState([]);
-  const [editingProduct, setEditingProduct] = useState(null);
-  const [showForm, setShowForm] = useState(false);
-  const defaultFormData = {
-    id: '',
-    nome: '',
-    cat: '',
-    sub: '',
-    preco: '',
-    destaque: false,
-    tag: '',
-    cores: [],
-    tamanhos: [],
-    desc: '',
-    foto: ''
-  };
-  const [formData, setFormData] = useState(defaultFormData);
+const SENHA = "galene2025";
+const KEY = "galene_produtos_v1";
 
-  useEffect(() => {
-    let stored = localStorage.getItem('galeneProducts');
-    if (stored) {
-      setProducts(JSON.parse(stored));
+const CATS = ["Vestidos","Moletinho","Lanzinha","Conjuntos","Blusas","Regatas","Cardigans","Calcas","Macacoes"];
+
+const CORES = {
+  Preto:"#1A1A1A", Branco:"#F5F2EE", OffWhite:"#EEEADE", Vinho:"#6B2737",
+  Marinho:"#1E3A5F", Nude:"#C4A882", Bege:"#C8B89A", Caramelo:"#B5743A",
+  Rosa:"#E8A0A0", Vermelho:"#8B2020", Laranja:"#C97A3A", Amarelo:"#D4A82A",
+  Azul:"#3A6B9E", Verde:"#4A6B3A", Cinza:"#8A8A8A", Grafite:"#484848",
+  Marrom:"#6B4226", Jeans:"#3A5A7A", Colorido:"#B8935A", Lilas:"#9B7EC8",
+  Coral:"#E07A5F", Musgo:"#5C6B3A", Terracota:"#C16A3A",
+};
+
+const SP = ["P","M","G","GG"];
+const SX = ["P","M","G","GG","XGG"];
+const SU = ["Unico"];
+
+const PADROES = [
+  { id:1,  nome:"Vestido Bella",        cat:"Vestidos",  sub:"Viscolaycra", preco:40, destaque:true,  tag:"Mais Vendido", cores:["Preto","Branco","Vinho","Nude","Marinho"],     tamanhos:SP, desc:"Vestido basico em viscolaycra com caimento elegante.", foto:"" },
+  { id:4,  nome:"Vestido Eva",          cat:"Vestidos",  sub:"Viscolaycra", preco:40, destaque:false, tag:null,           cores:["Preto","Caramelo","Verde","Azul"],             tamanhos:SP, desc:"Corte reto com tecido leve e fluido.", foto:"" },
+  { id:5,  nome:"Vestido Safira",       cat:"Vestidos",  sub:"Viscolaycra", preco:60, destaque:true,  tag:"Novo",         cores:["Marinho","Vinho","Preto","Grafite"],           tamanhos:SP, desc:"Modelagem sofisticada para uso day to night.", foto:"" },
+  { id:6,  nome:"Vestido Naomi",        cat:"Vestidos",  sub:"Viscolaycra", preco:70, destaque:false, tag:null,           cores:["Preto","Nude","Rosa","Bege"],                  tamanhos:SP, desc:"Decote elegante com tecido de alta qualidade.", foto:"" },
+  { id:7,  nome:"Vestido Mara",         cat:"Vestidos",  sub:"Viscolaycra", preco:68, destaque:false, tag:null,           cores:["Vinho","Marrom","Terracota","Preto"],          tamanhos:SP, desc:"Vestido midi com textura leve e caimento perfeito.", foto:"" },
+  { id:8,  nome:"Vestido Ariel",        cat:"Vestidos",  sub:"Viscolaycra", preco:70, destaque:true,  tag:"Destaque",     cores:["Azul","Verde","Coral","Preto"],                tamanhos:SP, desc:"Vestido vibrante com modelagem contemporanea.", foto:"" },
+  { id:9,  nome:"Vestido Nina",         cat:"Vestidos",  sub:"Viscolaycra", preco:85, destaque:true,  tag:"Premium",      cores:["Preto","Marinho","Grafite","Vinho"],           tamanhos:SX, desc:"Linha premium com acabamento refinado.", foto:"" },
+  { id:10, nome:"Vestido Lola",         cat:"Vestidos",  sub:"Viscolaycra", preco:70, destaque:false, tag:null,           cores:["Nude","Rosa","Caramelo","Branco"],             tamanhos:SP, desc:"Vestido feminino com tecido macio e confortavel.", foto:"" },
+  { id:11, nome:"Vestido Lorena ML",    cat:"Vestidos",  sub:"Viscolaycra", preco:70, destaque:false, tag:null,           cores:["Preto","Bege","Cinza","Marinho"],              tamanhos:SP, desc:"Manga longa com tecido de alto desempenho.", foto:"" },
+  { id:12, nome:"Vestido Laila",        cat:"Vestidos",  sub:"Viscolaycra", preco:70, destaque:false, tag:null,           cores:["Verde","Musgo","Preto","Nude"],                tamanhos:SP, desc:"Inspiracao natural com corte anatomico.", foto:"" },
+  { id:13, nome:"Vestido Kenya",        cat:"Vestidos",  sub:"Viscolaycra", preco:65, destaque:false, tag:null,           cores:["Colorido","Coral","Laranja","Amarelo"],        tamanhos:SP, desc:"Estilo livre com cores vibrantes.", foto:"" },
+  { id:14, nome:"Vestido Marina",       cat:"Vestidos",  sub:"Viscolaycra", preco:65, destaque:false, tag:null,           cores:["Azul","Marinho","Jeans","Cinza"],              tamanhos:SP, desc:"Estilo nautico com corte moderno.", foto:"" },
+  { id:15, nome:"Vestido Pandora",      cat:"Vestidos",  sub:"Viscolaycra", preco:65, destaque:false, tag:null,           cores:["Preto","Vinho","Lilas","Cinza"],               tamanhos:SP, desc:"Tecido elastico de alta recuperacao.", foto:"" },
+  { id:16, nome:"Vestido Italia",       cat:"Vestidos",  sub:"Viscolaycra", preco:60, destaque:false, tag:null,           cores:["Bege","Nude","OffWhite","Rosa"],               tamanhos:SP, desc:"Inspirado na moda mediterranea.", foto:"" },
+  { id:17, nome:"Vestido Allegra",      cat:"Vestidos",  sub:"Viscolaycra", preco:65, destaque:false, tag:null,           cores:["Preto","Coral","Verde","Amarelo"],             tamanhos:SP, desc:"Vestido alegre com cores marcantes.", foto:"" },
+  { id:18, nome:"Vestido Brisa",        cat:"Vestidos",  sub:"Viscolaycra", preco:40, destaque:false, tag:null,           cores:["OffWhite","Azul","Rosa","Verde"],              tamanhos:SP, desc:"Leve como uma brisa, conforto o dia todo.", foto:"" },
+  { id:19, nome:"Vestido Luana",        cat:"Vestidos",  sub:"Viscolaycra", preco:40, destaque:false, tag:null,           cores:["Preto","Bege","Caramelo"],                    tamanhos:SP, desc:"Basico essencial para o dia a dia.", foto:"" },
+  { id:20, nome:"Vestido Elisa",        cat:"Vestidos",  sub:"Viscolaycra", preco:60, destaque:false, tag:null,           cores:["Rosa","Nude","Vinho","Lilas"],                 tamanhos:SP, desc:"Feminino e elegante para qualquer ocasiao.", foto:"" },
+  { id:21, nome:"Vestido Aurora",       cat:"Vestidos",  sub:"Viscolaycra", preco:40, destaque:false, tag:null,           cores:["Laranja","Coral","Amarelo","Vermelho"],        tamanhos:SP, desc:"Cores do amanhecer em tecido premium.", foto:"" },
+  { id:22, nome:"Vestido Monica Mol.",  cat:"Moletinho", sub:"Moletinho",   preco:75, destaque:true,  tag:"Novo",         cores:["Preto","Cinza","Bege","Marinho"],              tamanhos:SP, desc:"Moletinho premium com caimento relaxado e elegante.", foto:"" },
+  { id:23, nome:"Vestido Pandora Mol.", cat:"Moletinho", sub:"Moletinho",   preco:85, destaque:false, tag:null,           cores:["Preto","Grafite","Cinza","Musgo"],             tamanhos:SP, desc:"Macio e confortavel, perfeito para o dia a dia.", foto:"" },
+  { id:24, nome:"Vestido Italia Mol.",  cat:"Moletinho", sub:"Moletinho",   preco:75, destaque:false, tag:null,           cores:["Bege","Caramelo","OffWhite","Marrom"],         tamanhos:SP, desc:"Estilo italiano em tecido moletinho premium.", foto:"" },
+  { id:25, nome:"Vestido Italia Lanz.", cat:"Lanzinha",  sub:"Lanzinha",    preco:60, destaque:false, tag:null,           cores:["Bege","Nude","OffWhite","Cinza"],              tamanhos:SP, desc:"Lanzinha de alta qualidade com caimento suave.", foto:"" },
+  { id:26, nome:"Vestido Monica Lanz.", cat:"Lanzinha",  sub:"Lanzinha",    preco:60, destaque:false, tag:null,           cores:["Preto","Marinho","Grafite"],                  tamanhos:SP, desc:"Modelagem moderna em lanzinha premium.", foto:"" },
+  { id:27, nome:"Vestido Monica L2",   cat:"Lanzinha",  sub:"Lanzinha",    preco:60, destaque:false, tag:null,           cores:["Rosa","Lilas","Coral","Nude"],                tamanhos:SP, desc:"Cores pastel delicadas em tecido lanzinha.", foto:"" },
+  { id:2,  nome:"Conjunto Dallas",     cat:"Conjuntos", sub:"Viscolaycra", preco:75, destaque:true,  tag:"Mais Vendido", cores:["Preto","Nude","Marinho","Caramelo"],           tamanhos:SP, desc:"Conjunto cropped + saia com caimento impecavel.", foto:"" },
+  { id:28, nome:"Conjunto Dani",       cat:"Conjuntos", sub:"Viscolaycra", preco:85, destaque:true,  tag:"Premium",      cores:["Preto","Vinho","Grafite","Marinho"],           tamanhos:SP, desc:"Conjunto sofisticado para ocasioes especiais.", foto:"" },
+  { id:29, nome:"Conjunto Tiffany",    cat:"Conjuntos", sub:"Viscolaycra", preco:50, destaque:false, tag:null,           cores:["Nude","Rosa","Bege","OffWhite"],               tamanhos:SP, desc:"Delicado e feminino, ideal para o dia a dia.", foto:"" },
+  { id:30, nome:"Conj. Tiffany Mol.",  cat:"Conjuntos", sub:"Moletinho",   preco:98, destaque:false, tag:"Premium",      cores:["Cinza","Bege","Preto","Marinho"],              tamanhos:SP, desc:"Conjunto moletinho premium para o casual chic.", foto:"" },
+  { id:31, nome:"Conj. Chantal Calca", cat:"Conjuntos", sub:"Viscolaycra", preco:80, destaque:false, tag:null,           cores:["Preto","Marinho","Grafite","Vinho"],           tamanhos:SP, desc:"Calca + blusa com tecido de alta qualidade.", foto:"" },
+  { id:32, nome:"Conjunto Chantal",    cat:"Conjuntos", sub:"Viscolaycra", preco:80, destaque:false, tag:null,           cores:["Nude","Bege","Caramelo","Rosa"],               tamanhos:SP, desc:"Elegancia cotidiana em viscolaycra premium.", foto:"" },
+  { id:33, nome:"Blusa Caja",          cat:"Blusas",    sub:"Viscolaycra", preco:35, destaque:false, tag:null,           cores:["Preto","Branco","Nude","Cinza","Azul"],        tamanhos:SP, desc:"Blusa versatil para compor looks variados.", foto:"" },
+  { id:34, nome:"Blusa Bagda",         cat:"Blusas",    sub:"Viscolaycra", preco:39, destaque:false, tag:null,           cores:["Preto","Marinho","Verde","Vinho"],             tamanhos:SP, desc:"Modelagem solta com tecido leve.", foto:"" },
+  { id:35, nome:"Blusa Julia",         cat:"Blusas",    sub:"Viscolaycra", preco:45, destaque:true,  tag:"Novo",         cores:["Branco","OffWhite","Nude","Rosa"],             tamanhos:SP, desc:"Blusa premium com detalhes delicados.", foto:"" },
+  { id:36, nome:"Blusa Yasmin",        cat:"Blusas",    sub:"Viscolaycra", preco:30, destaque:false, tag:null,           cores:["Colorido","Coral","Azul","Verde","Amarelo"],   tamanhos:SP, desc:"Estampas vibrantes para looks descontraidos.", foto:"" },
+  { id:37, nome:"Regata Ellen",        cat:"Regatas",   sub:"Viscolaycra", preco:20, destaque:false, tag:null,           cores:["Preto","Branco","Nude","Cinza","Rosa","Azul"], tamanhos:SP, desc:"Regata basica em viscolaycra, essencial no guarda-roupa.", foto:"" },
+  { id:38, nome:"Cardigan Canelado",   cat:"Cardigans", sub:"Canelado",    preco:39, destaque:false, tag:null,           cores:["Preto","Bege","Caramelo","Cinza","OffWhite"],  tamanhos:SU, desc:"Cardigan canelado com textura premium.", foto:"" },
+  { id:39, nome:"Cardigan Luxor",      cat:"Cardigans", sub:"Viscolycra",  preco:39, destaque:false, tag:null,           cores:["Preto","Marinho","Vinho","Grafite","Nude"],    tamanhos:SU, desc:"Tecido macio e encorpado, ideal para camadas.", foto:"" },
+  { id:40, nome:"Calca Pantalona",     cat:"Calcas",    sub:"Viscolaycra", preco:40, destaque:false, tag:null,           cores:["Preto","Marinho","Caramelo","Bege","Cinza"],   tamanhos:SP, desc:"Pantalona fluida com cos elastico confortavel.", foto:"" },
+  { id:3,  nome:"Macacao Kami",        cat:"Macacoes",  sub:"Viscolaycra", preco:79, destaque:true,  tag:"Destaque",     cores:["Preto","Nude","Caramelo","Marinho","Vinho"],   tamanhos:SP, desc:"Macacao elegante para looks completos e sofisticados.", foto:"" },
+];
+
+function load() {
+  if (typeof window === "undefined") return PADROES;
+  try {
+    var raw = localStorage.getItem(KEY);
+    if (raw) return JSON.parse(raw);
+  } catch(e) {}
+  return PADROES;
+}
+
+function save(list) {
+  try { localStorage.setItem(KEY, JSON.stringify(list)); } catch(e) {}
+}
+
+function novoProd() {
+  return { id: Date.now(), nome:"", cat:"Vestidos", sub:"Viscolaycra", preco:"", destaque:false, tag:null, cores:[], tamanhos:SP.slice(), desc:"", foto:"" };
+}
+
+function ModalForm(props) {
+  var prod = props.prod;
+  var onSave = props.onSave;
+  var onClose = props.onClose;
+  var isNew = !prod;
+  var init = isNew ? novoProd() : Object.assign({}, prod);
+
+  var s = useState(init);
+  var f = s[0];
+  var setF = s[1];
+
+  var es = useState({});
+  var erros = es[0];
+  var setErros = es[1];
+
+  function set(k, v) {
+    setF(function(p) { var n = Object.assign({}, p); n[k] = v; return n; });
+    setErros(function(p) { var n = Object.assign({}, p); n[k] = null; return n; });
+  }
+
+  function toggleCor(c) {
+    var arr = f.cores.slice();
+    var idx = arr.indexOf(c);
+    if (idx >= 0) arr.splice(idx, 1);
+    else arr.push(c);
+    set("cores", arr);
+  }
+
+  function toggleTam(t) {
+    var arr = f.tamanhos.slice();
+    var idx = arr.indexOf(t);
+    if (idx >= 0) arr.splice(idx, 1);
+    else arr.push(t);
+    set("tamanhos", arr);
+  }
+
+  function validar() {
+    var e = {};
+    if (!f.nome.trim()) e.nome = "Nome obrigatorio";
+    if (!f.preco || isNaN(Number(f.preco)) || Number(f.preco) <= 0) e.preco = "Preco invalido";
+    if (!f.cores.length) e.cores = "Selecione ao menos 1 cor";
+    if (!f.tamanhos.length) e.tamanhos = "Selecione ao menos 1 tamanho";
+    if (!f.desc.trim()) e.desc = "Descricao obrigatoria";
+    setErros(e);
+    return Object.keys(e).length === 0;
+  }
+
+  function handleSave() {
+    if (!validar()) return;
+    var out = Object.assign({}, f, { preco: Number(f.preco) });
+    onSave(out);
+  }
+
+  var inp = { width:"100%", padding:"10px 12px", border:"1.5px solid "+T.border, borderRadius:8, fontSize:13, color:T.ink, background:T.panel, outline:"none", boxSizing:"border-box", fontFamily:"sans-serif" };
+  var inpErr = Object.assign({}, inp, { border:"1.5px solid "+T.ruby });
+  var lbl = { display:"block", fontSize:10, letterSpacing:2, color:T.ink4, textTransform:"uppercase", marginBottom:6, fontFamily:"sans-serif" };
+
+  return (
+    <div style={{ position:"fixed", inset:0, zIndex:900, display:"flex", alignItems:"center", justifyContent:"center", padding:16 }}>
+      <div onClick={onClose} style={{ position:"absolute", inset:0, background:"rgba(26,23,20,0.55)" }} />
+      <div style={{ position:"relative", background:T.panel, width:"100%", maxWidth:580, maxHeight:"92vh", overflowY:"auto", borderRadius:16, boxShadow:"0 24px 80px rgba(26,23,20,0.22)" }}>
+        <div style={{ height:3, background:"linear-gradient(90deg,#8A6A38,#B8935A,#D4B07A,#B8935A,#8A6A38)" }} />
+        <div style={{ padding:"24px 28px 32px" }}>
+
+          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:22 }}>
+            <h2 style={{ margin:0, fontFamily:"Georgia,serif", fontSize:24, color:T.ink, fontWeight:600 }}>
+              {isNew ? "Novo Produto" : "Editar Produto"}
+            </h2>
+            <button onClick={onClose} style={{ background:"none", border:"1.5px solid "+T.border, borderRadius:8, width:36, height:36, cursor:"pointer", fontSize:16, color:T.ink3 }}>X</button>
+          </div>
+
+          <div style={{ marginBottom:14 }}>
+            <label style={lbl}>Nome *</label>
+            <input value={f.nome} onChange={function(e){set("nome",e.target.value);}} style={erros.nome ? inpErr : inp} placeholder="Ex: Vestido Bella" />
+            {erros.nome && <div style={{ fontSize:10, color:T.ruby, marginTop:3 }}>{erros.nome}</div>}
+          </div>
+
+          <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:14, marginBottom:14 }}>
+            <div>
+              <label style={lbl}>Categoria</label>
+              <select value={f.cat} onChange={function(e){set("cat",e.target.value);}} style={inp}>
+                {CATS.map(function(c){ return <option key={c} value={c}>{c}</option>; })}
+              </select>
+            </div>
+            <div>
+              <label style={lbl}>Sub-categoria</label>
+              <input value={f.sub} onChange={function(e){set("sub",e.target.value);}} style={inp} placeholder="Ex: Viscolaycra" />
+            </div>
+          </div>
+
+          <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:14, marginBottom:14 }}>
+            <div>
+              <label style={lbl}>Preco R$ *</label>
+              <input value={f.preco} onChange={function(e){set("preco",e.target.value);}} type="number" min="0" step="0.01" style={erros.preco ? inpErr : inp} placeholder="0.00" />
+              {erros.preco && <div style={{ fontSize:10, color:T.ruby, marginTop:3 }}>{erros.preco}</div>}
+            </div>
+            <div>
+              <label style={lbl}>Tag</label>
+              <select value={f.tag || ""} onChange={function(e){set("tag",e.target.value||null);}} style={inp}>
+                <option value="">Sem tag</option>
+                <option value="Mais Vendido">Mais Vendido</option>
+                <option value="Novo">Novo</option>
+                <option value="Destaque">Destaque</option>
+                <option value="Premium">Premium</option>
+              </select>
+            </div>
+          </div>
+
+          <div style={{ marginBottom:14 }}>
+            <label style={lbl}>URL da Foto (opcional)</label>
+            <input value={f.foto||""} onChange={function(e){set("foto",e.target.value);}} style={inp} placeholder="https://i.imgur.com/exemplo.jpg" />
+          </div>
+
+          <div style={{ marginBottom:14 }}>
+            <label style={lbl}>Descricao *</label>
+            <textarea value={f.desc} onChange={function(e){set("desc",e.target.value);}} rows={3} style={Object.assign({}, erros.desc ? inpErr : inp, { resize:"vertical" })} />
+            {erros.desc && <div style={{ fontSize:10, color:T.ruby, marginTop:3 }}>{erros.desc}</div>}
+          </div>
+
+          <div style={{ marginBottom:16 }}>
+            <label style={{ display:"flex", alignItems:"center", gap:10, cursor:"pointer" }}>
+              <div onClick={function(){set("destaque",!f.destaque);}}
+                style={{ width:40, height:22, borderRadius:11, background:f.destaque?T.gold:T.bg2, border:"1.5px solid "+(f.destaque?T.gold:T.border), position:"relative", transition:"all .2s", cursor:"pointer", flexShrink:0 }}>
+                <div style={{ position:"absolute", top:2, left:f.destaque?19:2, width:16, height:16, borderRadius:"50%", background:f.destaque?"white":T.ink4, transition:"left .2s" }} />
+              </div>
+              <span style={{ fontSize:12, color:T.ink2, fontWeight:600, fontFamily:"sans-serif" }}>Exibir nos Destaques</span>
+            </label>
+          </div>
+
+          <div style={{ marginBottom:16 }}>
+            <label style={lbl}>Cores disponiveis *</label>
+            {erros.cores && <div style={{ fontSize:10, color:T.ruby, marginBottom:6 }}>{erros.cores}</div>}
+            <div style={{ display:"flex", flexWrap:"wrap", gap:6 }}>
+              {Object.keys(CORES).map(function(c){
+                var sel = f.cores.indexOf(c) >= 0;
+                return (
+                  <button key={c} onClick={function(){toggleCor(c);}}
+                    style={{ display:"flex", alignItems:"center", gap:6, padding:"5px 10px 5px 7px", border:"1.5px solid "+(sel?T.gold:T.border), borderRadius:20, background:sel?T.goldXlt:T.panel, cursor:"pointer" }}>
+                    <div style={{ width:10, height:10, borderRadius:"50%", background:CORES[c], border:"1px solid rgba(0,0,0,0.1)", flexShrink:0 }} />
+                    <span style={{ fontSize:11, color:sel?T.goldDk:T.ink3, fontFamily:"sans-serif" }}>{c}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <div style={{ marginBottom:22 }}>
+            <label style={lbl}>Tamanhos *</label>
+            {erros.tamanhos && <div style={{ fontSize:10, color:T.ruby, marginBottom:6 }}>{erros.tamanhos}</div>}
+            <div style={{ display:"flex", gap:8, marginBottom:10, flexWrap:"wrap" }}>
+              {[["P M G GG",SP],["P M G GG XGG",SX],["Unico",SU]].map(function(item){
+                return (
+                  <button key={item[0]} onClick={function(){set("tamanhos",item[1].slice());}}
+                    style={{ padding:"4px 10px", border:"1px solid "+T.border, borderRadius:6, background:T.bg2, cursor:"pointer", fontSize:10, color:T.ink3, fontFamily:"sans-serif" }}>
+                    {item[0]}
+                  </button>
+                );
+              })}
+            </div>
+            <div style={{ display:"flex", gap:8, flexWrap:"wrap" }}>
+              {["P","M","G","GG","XGG","Unico"].map(function(t){
+                var sel = f.tamanhos.indexOf(t) >= 0;
+                return (
+                  <button key={t} onClick={function(){toggleTam(t);}}
+                    style={{ width:54, height:44, background:sel?T.gold:T.panel, border:"1.5px solid "+(sel?T.gold:T.border), borderRadius:10, cursor:"pointer", fontSize:12, fontWeight:700, color:sel?"white":T.ink2, fontFamily:"sans-serif" }}>
+                    {t}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <div style={{ display:"flex", gap:10 }}>
+            <button onClick={onClose}
+              style={{ background:"none", border:"1.5px solid "+T.border, borderRadius:10, padding:"12px 20px", cursor:"pointer", fontSize:12, fontWeight:700, color:T.ink3, fontFamily:"sans-serif" }}>
+              Cancelar
+            </button>
+            <button onClick={handleSave}
+              style={{ flex:1, background:T.gold, border:"none", borderRadius:10, padding:"12px", cursor:"pointer", fontSize:13, fontWeight:700, color:"white", letterSpacing:1, fontFamily:"sans-serif" }}>
+              {isNew ? "Criar Produto" : "Salvar Alteracoes"}
+            </button>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default function AdminPage() {
+  var a = useState(false); var autenticado = a[0]; var setAuth = a[1];
+  var si = useState(""); var senhaInput = si[0]; var setSenha = si[1];
+  var se = useState(false); var senhaErro = se[0]; var setErro = se[1];
+  var p = useState([]); var produtos = p[0]; var setProdutos = p[1];
+  var m = useState(null); var modal = m[0]; var setModal = m[1];
+  var cd = useState(null); var confirmDel = cd[0]; var setConfirmDel = cd[1];
+  var fi = useState("Todos"); var filtro = fi[0]; var setFiltro = fi[1];
+  var to = useState(null); var toast = to[0]; var setToast = to[1];
+
+  useEffect(function(){
+    if (autenticado) setProdutos(load());
+  }, [autenticado]);
+
+  function showToast(msg) {
+    setToast(msg);
+    setTimeout(function(){ setToast(null); }, 3000);
+  }
+
+  function login() {
+    if (senhaInput === SENHA) { setAuth(true); setErro(false); }
+    else setErro(true);
+  }
+
+  function salvar(prod) {
+    var novo;
+    if (modal === "novo") {
+      novo = produtos.concat([prod]);
+      showToast("Produto criado com sucesso!");
     } else {
-      const initialProducts = [];
-      let currentId = 1;
-
-      // Blusas
-      ['Caja', 'Bagda', 'Julia', 'Yasmin'].forEach(nome => {
-        initialProducts.push(createProduct(currentId++, nome, 'Blusas'));
-      });
-
-      // Regatas
-      ['Ellen'].forEach(nome => {
-        initialProducts.push(createProduct(currentId++, nome, 'Regatas'));
-      });
-
-      // Cardigans
-      ['Canelado', 'Luxor'].forEach(nome => {
-        initialProducts.push(createProduct(currentId++, nome, 'Cardigans'));
-      });
-
-      // Conjuntos
-      ['Dallas', 'Dani', 'Tiffany', 'Tiffany Moletinho', 'Chantal Calça', 'Chantal'].forEach(nome => {
-        initialProducts.push(createProduct(currentId++, nome, 'Conjuntos'));
-      });
-
-      // Macacões
-      ['Kami'].forEach(nome => {
-        initialProducts.push(createProduct(currentId++, nome, 'Macacões'));
-      });
-
-      // Calças
-      ['Pantalona'].forEach(nome => {
-        initialProducts.push(createProduct(currentId++, nome, 'Calças'));
-      });
-
-      // Vestidos Viscolaycra (33 to total 48)
-      ['Bella', 'Eva', 'Safira', 'Naomi', 'Mara', 'Ariel', 'Nina', 'Atenas', 'Brisa', 'Luana', 'Treviso', 'Lisa', 'Rio', 'Giane', 'Paty', 'Star', 'Elisa', 'Caja', 'Listrado', 'Modena', 'Tami', 'Camila', 'Azaleia', 'Ellen', 'Pamela', 'Mia', 'Saara', 'Rafa', 'Clara', 'Rubi', 'Milano', 'Kim', 'Nicole'].forEach(nome => {
-        initialProducts.push(createProduct(currentId++, nome, 'Vestidos', 'Viscolaycra'));
-      });
-
-      setProducts(initialProducts);
-      localStorage.setItem('galeneProducts', JSON.stringify(initialProducts));
+      novo = produtos.map(function(x){ return x.id === prod.id ? prod : x; });
+      showToast("Produto atualizado!");
     }
-  }, []);
+    setProdutos(novo);
+    save(novo);
+    setModal(null);
+  }
 
-  useEffect(() => {
-    if (products.length > 0) {
-      localStorage.setItem('galeneProducts', JSON.stringify(products));
-    }
-  }, [products]);
+  function excluir(id) {
+    var novo = produtos.filter(function(x){ return x.id !== id; });
+    setProdutos(novo);
+    save(novo);
+    setConfirmDel(null);
+    showToast("Produto removido.");
+  }
 
-  const handleLogin = (e) => {
-    e.preventDefault();
-    if (loginUsername === 'admin' && loginPassword === '1234') {
-      setIsAuthenticated(true);
-    } else {
-      alert('Credenciais inválidas!');
-    }
-  };
+  function restaurar() {
+    if (!window.confirm("Restaurar o catalogo original? Todas as alteracoes serao perdidas.")) return;
+    setProdutos(PADROES);
+    save(PADROES);
+    showToast("Catalogo restaurado!");
+  }
 
-  const handleLogout = () => {
-    setIsAuthenticated(false);
-    setLoginUsername('');
-    setLoginPassword('');
-  };
+  var catsFiltro = ["Todos"].concat(CATS);
+  var filtrados = filtro === "Todos" ? produtos : produtos.filter(function(x){ return x.cat === filtro; });
 
-  const toggleForm = () => {
-    setShowForm(!showForm);
-    setEditingProduct(null);
-    setFormData(defaultFormData);
-  };
+  var tagCor = { "Mais Vendido":T.gold, "Novo":T.jade, "Destaque":"#5A7A8B", "Premium":T.ruby };
 
-  const handleInputChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    if (['cores', 'tamanhos'].includes(name)) {
-      const arr = value.split(',').map(s => s.trim()).filter(s => s);
-      setFormData(prev => ({ ...prev, [name]: arr }));
-    } else if (type === 'checkbox') {
-      setFormData(prev => ({ ...prev, [name]: checked }));
-    } else {
-      setFormData(prev => ({ ...prev, [name]: value }));
-    }
-  };
-
-  const addProduct = (e) => {
-    e.preventDefault();
-    const newId = products.length ? Math.max(...products.map(p => p.id)) + 1 : 1;
-    const newProduct = { ...formData, id: newId, preco: parseFloat(formData.preco) || 0 };
-    setProducts([...products, newProduct]);
-    setShowForm(false);
-    setFormData(defaultFormData);
-  };
-
-  const updateProduct = (e) => {
-    e.preventDefault();
-    const updatedProduct = { ...formData, id: editingProduct.id, preco: parseFloat(formData.preco) || 0 };
-    setProducts(products.map(p => p.id === editingProduct.id ? updatedProduct : p));
-    setEditingProduct(null);
-    setShowForm(false);
-    setFormData(defaultFormData);
-  };
-
-  const deleteProduct = (id) => {
-    if (confirm('Tem certeza que deseja excluir este produto?')) {
-      setProducts(products.filter(p => p.id !== id));
-    }
-  };
-
-  const editProduct = (product) => {
-    setEditingProduct(product);
-    setFormData({ ...product });
-    setShowForm(true);
-  };
-
-  const styles = {
-    container: {
-      padding: '20px',
-      fontFamily: 'Arial, sans-serif',
-      maxWidth: '100vw',
-      backgroundColor: '#fff'
-    },
-    loginContainer: {
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      justifyContent: 'center',
-      minHeight: '50vh',
-      padding: '20px'
-    },
-    loginForm: {
-      display: 'flex',
-      flexDirection: 'column',
-      gap: '15px',
-      width: '100%',
-      maxWidth: '300px'
-    },
-    input: {
-      padding: '12px',
-      border: '1px solid #ddd',
-      borderRadius: '4px',
-      fontSize: '16px',
-      boxSizing: 'border-box'
-    },
-    btn: {
-      padding: '10px 20px',
-      backgroundColor: '#007bff',
-      color: 'white',
-      border: 'none',
-      borderRadius: '4px',
-      cursor: 'pointer',
-      fontSize: '16px',
-      marginBottom: '10px'
-    },
-    logoutBtn: {
-      padding: '10px 20px',
-      backgroundColor: '#6c757d',
-      color: 'white',
-      border: 'none',
-      borderRadius: '4px',
-      cursor: 'pointer',
-      fontSize: '16px',
-      marginBottom: '20px'
-    },
-    form: {
-      display: 'grid',
-      gap: '15px',
-      marginBottom: '30px',
-      padding: '25px',
-      border: '1px solid #ddd',
-      borderRadius: '8px',
-      backgroundColor: '#f9f9f9',
-      gridTemplateColumns: '1fr 1fr'
-    },
-    formFull: {
-      gridColumn: '1 / -1'
-    },
-    label: {
-      display: 'flex',
-      alignItems: 'center',
-      gap: '10px',
-      fontWeight: 'bold'
-    },
-    tableContainer: {
-      overflowX: 'auto',
-      border: '1px solid #dee2e6',
-      borderRadius: '8px',
-      boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
-    },
-    table: {
-      width: '100%',
-      borderCollapse: 'collapse',
-      minWidth: '1200px'
-    },
-    th: {
-      backgroundColor: '#f8f9fa',
-      padding: '15px 12px',
-      textAlign: 'left',
-      borderBottom: '2px solid #dee2e6',
-      position: 'sticky',
-      top: 0,
-      zIndex: 10,
-      fontWeight: 'bold',
-      whiteSpace: 'nowrap'
-    },
-    td: {
-      padding: '12px',
-      borderBottom: '1px solid #dee2e6',
-      verticalAlign: 'top'
-    },
-    img: {
-      width: '60px',
-      height: '80px',
-      objectFit: 'cover',
-      borderRadius: '4px',
-      border: '1px solid #eee'
-    },
-    editBtn: {
-      padding: '6px 12px',
-      backgroundColor: '#28a745',
-      color: 'white',
-      border: 'none',
-      borderRadius: '3px',
-      cursor: 'pointer',
-      fontSize: '14px',
-      marginRight: '5px'
-    },
-    delBtn: {
-      padding: '6px 12px',
-      backgroundColor: '#dc3545',
-      color: 'white',
-      border: 'none',
-      borderRadius: '3px',
-      cursor: 'pointer',
-      fontSize: '14px'
-    }
-  };
-
-  if (!isAuthenticated) {
+  if (!autenticado) {
     return (
-      <div style={styles.container}>
-        <div style={styles.loginContainer}>
-          <h1 style={{ marginBottom: '30px', color: '#333' }}>Admin Login - Galene</h1>
-          <form onSubmit={handleLogin} style={styles.loginForm}>
-            <input
-              type="text"
-              placeholder="Usuário (admin)"
-              value={loginUsername}
-              onChange={(e) => setLoginUsername(e.target.value)}
-              style={styles.input}
-              required
-            />
-            <input
-              type="password"
-              placeholder="Senha (1234)"
-              value={loginPassword}
-              onChange={(e) => setLoginPassword(e.target.value)}
-              style={styles.input}
-              required
-            />
-            <button type="submit" style={styles.btn}>Entrar</button>
-          </form>
+      <div style={{ minHeight:"100vh", background:T.bg, display:"flex", alignItems:"center", justifyContent:"center", padding:20, fontFamily:"sans-serif" }}>
+        <div style={{ background:T.panel, border:"1px solid "+T.border, borderRadius:20, padding:"40px 36px", width:"100%", maxWidth:360, boxShadow:"0 16px 60px rgba(26,23,20,0.12)" }}>
+          <div style={{ textAlign:"center", marginBottom:30 }}>
+            <div style={{ width:56, height:56, background:T.goldXlt, border:"2px solid "+T.gold, borderRadius:12, display:"flex", alignItems:"center", justifyContent:"center", margin:"0 auto 14px", fontSize:24 }}>G</div>
+            <div style={{ fontFamily:"Georgia,serif", fontSize:26, letterSpacing:4, color:T.ink, fontWeight:600 }}>GALENE</div>
+            <div style={{ fontSize:10, letterSpacing:3, color:T.ink4, textTransform:"uppercase", marginTop:4 }}>Painel Administrativo</div>
+          </div>
+          <label style={{ display:"block", fontSize:10, letterSpacing:2, color:T.ink4, textTransform:"uppercase", marginBottom:8 }}>Senha</label>
+          <input
+            type="password"
+            value={senhaInput}
+            onChange={function(e){ setSenha(e.target.value); setErro(false); }}
+            onKeyDown={function(e){ if(e.key==="Enter") login(); }}
+            placeholder="Digite a senha"
+            style={{ width:"100%", padding:"12px 14px", border:"1.5px solid "+(senhaErro?T.ruby:T.border), borderRadius:10, fontSize:14, color:T.ink, background:T.panel, outline:"none", boxSizing:"border-box", marginBottom:6, fontFamily:"sans-serif" }}
+          />
+          {senhaErro && <div style={{ fontSize:11, color:T.ruby, marginBottom:8 }}>Senha incorreta. Tente novamente.</div>}
+          <button onClick={login}
+            style={{ width:"100%", height:48, background:T.gold, border:"none", borderRadius:12, cursor:"pointer", fontSize:13, fontWeight:700, color:"white", letterSpacing:1, marginTop:8, fontFamily:"sans-serif" }}>
+            Entrar
+          </button>
         </div>
       </div>
     );
   }
-
-  const coresValue = Array.isArray(formData.cores) ? formData.cores.join(', ') : '';
-  const tamanhosValue = Array.isArray(formData.tamanhos) ? formData.tamanhos.join(', ') : '';
-
-  return (
-    <div style={styles.container}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-        <h1>Admin - Gerenciar Produtos Galene ({products.length} produtos)</h1>
-        <button onClick={handleLogout} style={styles.logoutBtn}>Logout</button>
-      </div>
-      <button onClick={toggleForm} style={styles.btn}>
-        {showForm ? 'Cancelar' : 'Adicionar Novo Produto'}
-      </button>
-      {showForm && (
-        <form
-          onSubmit={editingProduct ? updateProduct : addProduct}
-          style={styles.form}
-        >
-          <input
-            name="nome"
-            placeholder="Nome do Produto"
-            value={formData.nome}
-            onChange={handleInputChange}
-            style={styles.input}
-            required
-          />
-          <input
-            name="cat"
-            placeholder="Categoria"
-            value={formData.cat}
-            onChange={handleInputChange}
-            style={styles.input}
-            required
-          />
-          <input
-            name="sub"
-            placeholder="Subcategoria"
-            value={formData.sub}
-            onChange={handleInputChange}
-            style={styles.input}
-          />
-          <input
-            name="preco"
-            type="number"
-            step="0.01"
-            placeholder="Preço (R$)"
-            value={formData.preco}
-            onChange={handleInputChange}
-            style={styles.input}
-            required
-          />
-          <div style={styles.label}>
-            <label>Destaque:</label>
-            <input
-              name="destaque"
-              type="checkbox"
-              checked={formData.destaque}
-              onChange={handleInputChange}
-            />
-          </div>
-          <input
-            name="tag"
-            placeholder="Tag (ex: Novo)"
-            value={formData.tag}
-            onChange={handleInputChange}
-            style={styles.input}
-          />
-          <input
-            name="cores"
-            placeholder="Cores (separadas por vírgula)"
-            value={coresValue}
-            onChange={handleInputChange}
-            style={styles.input}
-          />
-          <input
-            name="tamanhos"
-            placeholder="Tamanhos (P,M,G,GG)"
-            value={tamanhosValue}
-            onChange={handleInputChange}
-            style={styles.input}
-          />
-          <textarea
-            name="desc"
-            placeholder="Descrição"
-            value={formData.desc}
-            onChange={handleInputChange}
-            style={{ ...styles.input, minHeight: '80px', gridColumn: '1 / -1' }}
-          />
-          <input
-            name="foto"
-            placeholder="URL da Foto"
-            value={formData.foto}
-            onChange={handleInputChange}
-            style={{ ...styles.input, gridColumn: '1 / -1' }}
-          />
-          <button type="submit" style={{ ...styles.btn, gridColumn: '1 / -1' }}>
-            {editingProduct ? 'Atualizar Produto' : 'Adicionar Produto'}
-          </button>
-        </form>
-      )}
-      <div style={styles.tableContainer}>
-        <table style={styles.table}>
-          <thead>
-            <tr>
-              <th style={styles.th}>ID</th>
-              <th style={styles.th}>Foto</th>
-              <th style={styles.th}>Nome</th>
-              <th style={styles.th}>Categoria</th>
-              <th style={styles.th}>Sub</th>
-              <th style={styles.th}>Preço</th>
-              <th style={styles.th}>Destaque</th>
-              <th style={styles.th}>Tag</th>
-              <th style={styles.th}>Cores</th>
-              <th style={styles.th}>Tamanhos</th>
-              <th style={styles.th}>Descrição</th>
-              <th style={styles.th}>Ações</th>
-            </tr>
-          </thead>
-          <tbody>
-            {products.map((p) => (
-              <tr key={p.id}>
-                <td style={styles.td}>{p.id}</td>
-                <td style={styles.td}>
-                  <img src={p.foto} alt={p.nome} style={styles.img} />
-                </td>
-                <td style={styles.td}>{p.nome}</td>
-                <td style={styles.td}>{p.cat}</td>
-                <td style={styles.td}>{p.sub}</td>
-                <td style={styles.td}>R$ {parseFloat(p.preco).toFixed(2)}</td>
-                <td style={styles.td}>{p.destaque ? 'Sim' : 'Não'}</td>
-                <td style={styles.td}>{p.tag}</td>
-                <td style={styles.td}>{p.cores.join(', ')}</td>
-                <td style={styles.td}>{p.tamanhos.join(', ')}</td>
-                <td style={styles.td}>{p.desc.substring(0, 50)}...</td>
-                <td style={styles.td}>
-                  <button
-                    onClick={() => editProduct(p)}
-                    style={styles.editBtn}
-                  >
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => deleteProduct(p.id)}
-                    style={styles.delBtn}
-                  >
-                    Delete
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  );
-};
-
-export default AdminPage;

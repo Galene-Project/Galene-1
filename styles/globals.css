@@ -1,0 +1,35 @@
+*, *::before, *::after {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: #FAFAF8;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+input, button, select, textarea {
+  font-family: inherit;
+}
+
+input {
+  font-size: 16px !important;
+  -webkit-appearance: none;
+}
+
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #B8935A55;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-track {
+  background: #F4F1EC;
+}

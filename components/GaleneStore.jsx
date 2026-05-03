@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-// ─── THEME ────────────────────────────────────────────────────────────────────
+// --- THEME --------------------------------------------------------------------
 const T = {
 bg: "#FAFAF8", bg2: "#F4F1EC", bg3: "#EDE8E0", panel: "#FFFFFF",
 border: "#E0D8CC", border2: "#C8BFB0",
@@ -7,7 +7,7 @@ gold: "#B8935A", goldDk: "#8A6A38", goldLt: "#D4B07A", goldXlt: "#F5EDD8",
 ink: "#1A1714", ink2: "#3A3530", ink3: "#6A6058", ink4: "#9A9088",
 ruby: "#8B3A3A", jade: "#3A6B4A",
 };
-// ─── HELPERS ──────────────────────────────────────────────────────────────────
+// --- HELPERS ------------------------------------------------------------------
 const fmt = (v) => "R$ " + Number(v).toFixed(2).replace(".", ",");
 const useWindowWidth = () => {
 const [w, setW] = useState(
@@ -20,21 +20,21 @@ return () => window.removeEventListener("resize", fn);
 }, []);
 return w;
 };
-// ─── COLOR MAP ────────────────────────────────────────────────────────────────
+// --- COLOR MAP ----------------------------------------------------------------
 const COR_HEX = {
-Preto: "#1A1A1A", Branco: "#F5F2EE", "Off White": "#EEEADE",
+Preto: "#1A1A1A", Branco: "#F5F2EE", "OffWhite": "#EEEADE",
 Vinho: "#6B2737", Marinho: "#1E3A5F", Nude: "#C4A882",
 Bege: "#C8B89A", Caramelo: "#B5743A", Rosa: "#E8A0A0",
 Vermelho: "#8B2020", Laranja: "#C97A3A", Amarelo: "#D4A82A",
 Azul: "#3A6B9E", Verde: "#4A6B3A", Cinza: "#8A8A8A",
 Grafite: "#484848", Marrom: "#6B4226", Jeans: "#3A5A7A",
-Colorido: "#B8935A", Lilás: "#9B7EC8", Coral: "#E07A5F",
+Colorido: "#B8935A", Lilas: "#9B7EC8", Coral: "#E07A5F",
 Musgo: "#5C6B3A", Terracota: "#C16A3A",
 };
 const SIZES_PADRAO = ["P", "M", "G", "GG"];
 const SIZES_PLUS = ["P", "M", "G", "GG", "XGG"];
-const SIZES_UNICO = ["Único"];
-// ─── CATALOG ──────────────────────────────────────────────────────────────────
+const SIZES_UNICO = ["Unico"];
+// --- CATALOG ------------------------------------------------------------------
 const PRODUTOS = [
 // VESTIDOS VISCOLAYCRA
 { id: 1, nome: "Vestido Bella", cat: "Vestidos", sub: "Viscolaycra", preco: 40, des
@@ -49,27 +49,27 @@ const PRODUTOS = [
 { id: 12, nome: "Vestido Laila", cat: "Vestidos", sub: "Viscolaycra", preco: 70, des
 { id: 13, nome: "Vestido Kenya", cat: "Vestidos", sub: "Viscolaycra", preco: 65, des
 { id: 14, nome: "Vestido Marina", cat: "Vestidos", sub: "Viscolaycra", preco: 65, des
-{ id: 15, nome: "Vestido Pandora", { id: 16, nome: "Vestido Itália", cat: "Vestidos", sub: "Viscolaycra", preco: 65, des
-cat: "Vestidos", sub: "Viscolaycra", preco: 60, des
+{ id: 15, nome: "Vestido Pandora", cat: "Vestidos", sub: "Viscolaycra", preco: 65, des
+{ id: 16, nome: "Vestido Italia", cat: "Vestidos", sub: "Viscolaycra", preco: 60, des
 { id: 17, nome: "Vestido Allegra", cat: "Vestidos", sub: "Viscolaycra", preco: 65, des
 { id: 18, nome: "Vestido Brisa", cat: "Vestidos", sub: "Viscolaycra", preco: 40, des
 { id: 19, nome: "Vestido Luana", cat: "Vestidos", sub: "Viscolaycra", preco: 40, des
 { id: 20, nome: "Vestido Elisa", cat: "Vestidos", sub: "Viscolaycra", preco: 60, des
 { id: 21, nome: "Vestido Aurora", // MOLETINHO
 cat: "Vestidos", sub: "Viscolaycra", preco: 40, des
-{ id: 22, nome: "Vestido Mônica Mol.", cat: "Moletinho", sub: "Moletinho", preco: 75, des
-{ id: 23, nome: "Vestido Pandora Mol.",cat: "Moletinho", sub: "Moletinho", { id: 24, nome: "Vestido Itália Mol.", cat: "Moletinho", sub: "Moletinho", // LANZINHA
-preco: 85, des
-preco: 75, des
-{ id: 25, nome: "Vestido Itália Lanz.",cat: "Lanzinha", sub: "Lanzinha", preco: 60, des
-{ id: 26, nome: "Vestido Mônica Lanz.",cat: "Lanzinha", sub: "Lanzinha", preco: 60, des
+{ id: 22, nome: "Vestido Monica Mol.", cat: "Moletinho", sub: "Moletinho", preco: 75, des
+{ id: 23, nome: "Vestido Pandora Mol.",cat: "Moletinho", sub: "Moletinho", preco: 85, des
+{ id: 24, nome: "Vestido Italia Mol.", cat: "Moletinho", sub: "Moletinho", preco: 75, des
+// LANZINHA
+{ id: 25, nome: "Vestido Italia Lanz.",cat: "Lanzinha", sub: "Lanzinha", preco: 60, des
+{ id: 26, nome: "Vestido Monica Lanz.",cat: "Lanzinha", sub: "Lanzinha", preco: 60, des
 { id: 27, nome: "Vestido Monica Lanz.",cat: "Lanzinha", sub: "Lanzinha", preco: 60, des
 // CONJUNTOS
 { id: 2, nome: "Conjunto Dallas", cat: "Conjuntos", sub: "Viscolaycra", preco: 75, dest
 { id: 28, nome: "Conjunto Dani", cat: "Conjuntos", sub: "Viscolaycra", preco: 85, dest
 { id: 29, nome: "Conjunto Tiffany", cat: "Conjuntos", sub: "Viscolaycra", preco: 50, dest
 { id: 30, nome: "Conj. Tiffany Mol.", cat: "Conjuntos", sub: "Moletinho", preco: 98, dest
-{ id: 31, nome: "Conj. Chantal Calça",cat: "Conjuntos", sub: "Viscolaycra", preco: 80, dest
+{ id: 31, nome: "Conj. Chantal Calca",cat: "Conjuntos", sub: "Viscolaycra", preco: 80, dest
 { id: 32, nome: "Conjunto Chantal", // BLUSAS
 cat: "Conjuntos", sub: "Viscolaycra", preco: 80, dest
 { id: 33, nome: "Blusa Caja", cat: "Blusas", sub: "Viscolaycra", preco: 35, dest
@@ -80,25 +80,25 @@ cat: "Blusas", sub: "Viscolaycra", preco: 30, dest
 { id: 37, nome: "Regata Ellen", // CARDIGANS
 cat: "Regatas", sub: "Viscolaycra", preco: 20, dest
 { id: 38, nome: "Cardigan Canelado", cat: "Cardigans", sub: "Canelado", preco: 39, dest
-{ id: 39, nome: "Cardigan Luxor", // CALÇAS
+{ id: 39, nome: "Cardigan Luxor", // CALCAS
 cat: "Cardigans", sub: "Viscolycra", preco: 39, dest
-{ id: 40, nome: "Calça Pantalona", cat: "Calças", sub: "Viscolaycra", preco: 40, dest
-// MACACÕES
-{ id: 3, nome: "Macacão Kami", cat: "Macacões", sub: "Viscolaycra", preco: 79, dest
+{ id: 40, nome: "Calca Pantalona", cat: "Calcas", sub: "Viscolaycra", preco: 40, dest
+// MACACOES
+{ id: 3, nome: "Macacao Kami", cat: "Macacoes", sub: "Viscolaycra", preco: 79, dest
 ];
 const CATS = [
-{ id: "destaques", label: "Destaques", icon: "★" },
-{ id: "Vestidos", label: "Vestidos", icon: "◆" },
-{ id: "Moletinho", label: "Moletinho", icon: "◈" },
-{ id: "Lanzinha", label: "Lanzinha", icon: "◇" },
-{ id: "Conjuntos", label: "Conjuntos", icon: "▣" },
-{ id: "Blusas", label: "Blusas", icon: "▷" },
-{ id: "Regatas", label: "Regatas", icon: "▽" },
-{ id: "Cardigans", label: "Cardigans", icon: "◉" },
-{ id: "Calças", label: "Calças", icon: "▤" },
-{ id: "Macacões", label: "Macacões", icon: "◐" },
+{ id: "destaques", label: "Destaques", icon: "*" },
+{ id: "Vestidos", label: "Vestidos", icon: "+" },
+{ id: "Moletinho", label: "Moletinho", icon: "+" },
+{ id: "Lanzinha", label: "Lanzinha", icon: "+" },
+{ id: "Conjuntos", label: "Conjuntos", icon: "+" },
+{ id: "Blusas", label: "Blusas", icon: ">" },
+{ id: "Regatas", label: "Regatas", icon: "v" },
+{ id: "Cardigans", label: "Cardigans", icon: "o" },
+{ id: "Calcas", label: "Calcas", icon: "=" },
+{ id: "Macacoes", label: "Macacoes", icon: "o" },
 ];
-// ─── SVG SILHOUETTES ──────────────────────────────────────────────────────────
+// --- SVG SILHOUETTES ----------------------------------------------------------
 const Sil = ({ cat, cor = "#B8935A", sz = 160 }) => {
 const light = ["#F5F2EE","#EEEADE","#C4A882","#C8B89A","#D4A82A","#E8A0A0"].includes(cor);
 const p = { fill: cor, stroke: light ? "#C0A880" : "none", strokeWidth: 0.5 };
@@ -118,7 +118,7 @@ if (cat === "Conjuntos") return (
 <ellipse cx="100" cy="30" rx="17" ry="19" fill="none" stroke={light ? "#B0906A" : accen
 </svg>
 );
-if (cat === "Macacões") return (
+if (cat === "Macacoes") return (
 <svg width={sz} height={sz} viewBox="0 0 200 255" style={{ filter: "drop-shadow(0 4px 12p
 <path d="M79 55C61 62 44 78 41 100L44 134C58 130 66 120 74 111L77 142L66 250L91 250L101
 <path d="M79 55C67 48 42 44 33 60L39 100C52 96 57 84 66 77Z" {...p} opacity=".7" />
@@ -126,7 +126,7 @@ if (cat === "Macacões") return (
 <ellipse cx="100" cy="30" rx="17" ry="19" fill="none" stroke={light ? "#B0906A" : accen
 </svg>
 );
-if (cat === "Calças") return (
+if (cat === "Calcas") return (
 <svg width={sz} height={sz} viewBox="0 0 200 248" style={{ filter: "drop-shadow(0 4px 12p
 <rect x="43" y="20" width="114" height="21" rx="3" {...p} />
 <path d="M50 41L150 41L158 128L126 128L113 248L87 248L74 128L42 128Z" {...p} />
@@ -141,7 +141,7 @@ return (
 </svg>
 );
 };
-// ─── MODAL PRODUTO ────────────────────────────────────────────────────────────
+// --- MODAL PRODUTO ------------------------------------------------------------
 const ModalProd = ({ prod, onClose, onAdd }) => {
 const [sel, setSel] = useState([]);
 const [cor, setCor] = useState(prod.cores[0]);
@@ -182,7 +182,7 @@ return (
 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-s
 <div>
 <div style={{ fontFamily: "'Lato',sans-serif", fontSize: 10, letterSpacing: 2.5
-{prod.cat} · {prod.sub}
+{prod.cat} ? {prod.sub}
 </div>
 <h2 style={{ margin: 0, fontFamily: "'Cormorant Garamond',serif", fontSize: mob
 {prod.nome}
@@ -190,7 +190,7 @@ return (
 </div>
 <button onClick={onClose} aria-label="Fechar" style={{ background: "none", </div>
 border
-{/* Preview + preço */}
+{/* Preview + preco */}
 <div style={{ display: "flex", gap: 16, marginBottom: 24 }}>
 <div style={{ width: 110, height: 120, background: `linear-gradient(135deg,${T.bg
 <Sil cat={prod.cat} cor={COR_HEX[cor] || T.gold} sz={92} />
@@ -200,7 +200,7 @@ border
 {fmt(prod.preco)}
 </div>
 <div style={{ fontFamily: "'Lato',sans-serif", fontSize: 10, color: T.ink4, mar
-por peça · atacado
+por peca ? atacado
 </div>
 <p style={{ margin: 0, fontFamily: "'Lato',sans-serif", fontSize: 11.5, color:
 {prod.desc}
@@ -210,7 +210,7 @@ por peça · atacado
 {/* Cores */}
 <div style={{ marginBottom: 18 }}>
 <div style={{ fontFamily: "'Lato',sans-serif", fontSize: 10, letterSpacing: 2, co
-Cor — <span style={{ color: T.gold }}>{cor}</span>
+Cor ? <span style={{ color: T.gold }}>{cor}</span>
 </div>
 <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
 {prod.cores.map((c) => (
@@ -224,7 +224,7 @@ Cor — <span style={{ color: T.gold }}>{cor}</span>
 {/* Tamanhos */}
 <div style={{ marginBottom: 18 }}>
 <div style={{ fontFamily: "'Lato',sans-serif", fontSize: 10, letterSpacing: 2, co
-Tamanho {tam && <span style={{ color: T.jade }}>— {tam} ✓</span>}
+Tamanho {tam && <span style={{ color: T.jade }}>? {tam} ?</span>}
 </div>
 <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
 {prod.tamanhos.map((t) => (
@@ -234,11 +234,11 @@ Tamanho {tam && <span style={{ color: T.jade }}>— {tam} ✓</span>}
 ))}
 </div>
 </div>
-{/* Adicionar combinação */}
-<button onClick={addSel} disabled={!tam} style={{ width: "100%", height: 44, {tam ? `＋ Adicionar ${cor} / ${tam}` : "Selecione um tamanho"}
+{/* Adicionar combinacao */}
+<button onClick={addSel} disabled={!tam} style={{ width: "100%", height: 44, {tam ? `+ Adicionar ${cor} / ${tam}` : "Selecione um tamanho"}
 </button>
 backgr
-{/* Lista de seleções */}
+{/* Lista de selecoes */}
 {sel.length > 0 && (
 <div style={{ background: T.bg, border: `1px solid ${T.border}`, borderRadius: 12
 <div style={{ padding: "10px 14px", borderBottom: `1px solid ${T.border}`, font
@@ -263,16 +263,16 @@ Selecionados
 </div>
 </div>
 )}
-{/* Botão principal */}
+{/* Botao principal */}
 <button onClick={handleAdd} disabled={!sel.length} style={{ width: "100%", height:
-{sel.length ? `Adicionar ao Pedido · ${fmt(totVal)}` : "Selecione cor e tamanho"}
+{sel.length ? `Adicionar ao Pedido ? ${fmt(totVal)}` : "Selecione cor e tamanho"}
 </button>
 </div>
 </div>
 </div>
 );
 };
-// ─── CARD DESTAQUE ────────────────────────────────────────────────────────────
+// --- CARD DESTAQUE ------------------------------------------------------------
 const CardDest = ({ prod, onClick }) => {
 const [hov, setHov] = useState(false);
 const [ci, setCi] = useState(0);
@@ -302,7 +302,7 @@ prod.t
 </div>
 <div style={{ padding: "18px 20px 22px", flex: 1, display: "flex", flexDirection: "colu
 <div style={{ fontFamily: "'Lato',sans-serif", fontSize: 9.5, letterSpacing: 2.5, col
-{prod.cat} · {prod.sub}
+{prod.cat} ? {prod.sub}
 </div>
 <div style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: mob ? 20 : 24, colo
 {prod.nome}
@@ -325,7 +325,7 @@ Selecionar
 : 28,
 );
 };
-// ─── CARD NORMAL ──────────────────────────────────────────────────────────────
+// --- CARD NORMAL --------------------------------------------------------------
 const Card = ({ prod, onClick }) => {
 const [hov, setHov] = useState(false);
 const [ci, setCi] = useState(0);
@@ -369,7 +369,7 @@ Ver
 T.gold
 );
 };
-// ─── CARRINHO ─────────────────────────────────────────────────────────────────
+// --- CARRINHO -----------------------------------------------------------------
 const Carrinho = ({ cart, onRemove, onFinish, onBack }) => {
 const [step, setStep] = useState(1);
 const [met, setMet] = useState(null);
@@ -398,7 +398,7 @@ if (ok) return (
 <div style={{ width: 72, height: 72, background: `linear-gradient(135deg,${T.goldDk},${
 <h2 style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: 32, color: T.gold, mar
 <p style={{ fontFamily: "'Lato',sans-serif", fontSize: 13, color: T.ink3, maxWidth: 380
-Recebemos seu pedido. Nossa equipe entrará em contato em breve pelo e-mail informado
+Recebemos seu pedido. Nossa equipe entrara em contato em breve pelo e-mail informado
 </p>
 <button onClick={onFinish} style={{ background: `linear-gradient(135deg,${T.goldDk},${T
 Continuar Comprando
@@ -407,21 +407,21 @@ Continuar Comprando
 );
 return (
 <div style={{ maxWidth: 980, margin: "0 auto", padding: mob ? "20px 14px 100px" : "36px 3
-{/* Cabeçalho */}
+{/* Cabecalho */}
 <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 28 }}>
 <button onClick={onBack} style={{ background: "none", border: `1.5px solid ${T.border
-← Voltar
+? Voltar
 </button>
 <h1 style={{ margin: 0, fontFamily: "'Cormorant Garamond',serif", fontSize: mob ? 24
 Meu Pedido
 </h1>
 <div style={{ marginLeft: "auto", fontFamily: "'Lato',sans-serif", fontSize: 11, colo
-{totPcs} pç {ok6 ? "✓ mínimo atingido" : `— faltam ${6 - totPcs}`}
+{totPcs} pc {ok6 ? "? minimo atingido" : `? faltam ${6 - totPcs}`}
 </div>
 </div>
 {!ok6 && totPcs > 0 && (
 <div style={{ background: "#FFF8E6", border: "1px solid #E8C96A", borderRadius: 10, p
-⚠ Adicione mais {6 - totPcs} peça{6 - totPcs > 1 ? "s" : ""} para finalizar — pedid
+? Adicione mais {6 - totPcs} peca{6 - totPcs > 1 ? "s" : ""} para finalizar ? pedid
 </div>
 )}
 {/* Steps */}
@@ -440,12 +440,12 @@ Meu Pedido
 </div>
 <div style={{ display: "grid", gridTemplateColumns: mob ? "1fr" : "1fr 300px", gap: 24
 <div>
-{/* STEP 1 — Itens */}
+{/* STEP 1 ? Itens */}
 {step === 1 && (
 <>
 {cart.length === 0 ? (
 <div style={{ textAlign: "center", padding: "60px", color: T.ink4, fontFamily
-Seu carrinho está vazio.
+Seu carrinho esta vazio.
 </div>
 ) : (
 <>
@@ -460,7 +460,7 @@ Seu carrinho está vazio.
 <div style={{ fontFamily: "'Lato',sans-serif", fontSize: 10, color:
 </div>
 <button onClick={() => onRemove(idx)} aria-label="Remover item" style
-✕
+?
 </button>
 </div>
 <div style={{ borderTop: `1px solid ${T.border}`, padding: "10px {item.sel.map((s) => (
@@ -475,21 +475,21 @@ Seu carrinho está vazio.
 </div>
 ))}
 <button onClick={() => ok6 && setStep(2)} disabled={!ok6} style={{ width: "
-{ok6 ? "Continuar → Dados" : `Mínimo 6 peças (faltam ${6 - totPcs})`}
+{ok6 ? "Continuar ? Dados" : `Minimo 6 pecas (faltam ${6 - totPcs})`}
 </button>
 </>
 )}
 </>
 )}
-{/* STEP 2 — Dados */}
+{/* STEP 2 ? Dados */}
 {step === 2 && (
 <div style={{ display: "grid", gridTemplateColumns: mob ? "1fr" : "1fr 1fr", gap:
 {[
-["razao", "Razão Social *", "2"],
+["razao", "Razao Social *", "2"],
 ["cnpj", "CNPJ / CPF *", "1"],
 ["email", "E-mail *", "1"],
 ["tel", "Telefone / WhatsApp *", "1"],
-["end", "Endereço", "2"],
+["end", "Endereco", "2"],
 ["cidade", "Cidade / Estado", "2"],
 ].map(([f, label, c]) => (
 <div key={f} style={{ gridColumn: `span ${mob ? "1" : c}` }}>
@@ -506,22 +506,22 @@ onBlur={(e) => (e.target.style.borderColor = formErros[f] ? T.ruby : T.bo
 ))}
 <div style={{ gridColumn: `span ${mob ? "1" : "2"}`, display: "flex", gap: 10,
 <button onClick={() => setStep(1)} style={{ background: "none", border: `1.5p
-← Voltar
+? Voltar
 </button>
 <button onClick={irParaPagamento} style={{ flex: 1, background: `linear-gradi
-Continuar → Pagamento
+Continuar ? Pagamento
 </button>
 </div>
 </div>
 )}
-{/* STEP 3 — Pagamento */}
+{/* STEP 3 ? Pagamento */}
 {step === 3 && !met && (
 <div>
 {[
 <div style={{ display: "grid", gridTemplateColumns: mob ? "1fr" : "1fr 1fr", ga
-["pix", " ", "PIX", "Pagamento à vista via chave PIX", T.jade, "#EAF5EE"],
-["cartao", " ", "Cartão de Crédito", "Pague na maquininha no ato da ].map(([v, ic, lb, sub, co, bg]) => (
-entreg
+["pix", "?", "PIX", "Pagamento a vista via chave PIX", T.jade, "#EAF5EE"],
+["cartao", "?", "Cartao de Credito", "Pague na maquininha no ato da entrega
+].map(([v, ic, lb, sub, co, bg]) => (
 <div key={v} onClick={() => setMet(v)} style={{ background: bg, border: `1.
 onMouseEnter={(e) => { e.currentTarget.style.borderColor = co; e.currentT
 onMouseLeave={(e) => { e.currentTarget.style.borderColor = T.border; e.cu
@@ -532,14 +532,14 @@ onMouseLeave={(e) => { e.currentTarget.style.borderColor = T.border; e.cu
 ))}
 </div>
 <button onClick={() => setStep(2)} style={{ background: "none", border: `1.5px
-← Voltar
+? Voltar
 </button>
 </div>
 )}
 {step === 3 && met && (
 <div>
 <button onClick={() => setMet(null)} style={{ background: "none", border: "none
-← Escolher outra forma
+? Escolher outra forma
 </button>
 {met === "pix" && (
 <div style={{ textAlign: "center", padding: "24px 0" }}>
@@ -556,7 +556,7 @@ Confirmar Pedido via PIX
 )}
 {met === "cartao" && (
 <div style={{ display: "grid", gridTemplateColumns: mob ? "1fr" : "1fr 1fr",
-{[["Número do Cartão", "2"], ["Nome no Cartão", "2"], ["Validade", "1"], ["
+{[["Numero do Cartao", "2"], ["Nome no Cartao", "2"], ["Validade", "1"], ["
 <div key={l} style={{ gridColumn: `span ${mob ? "1" : c}` }}>
 <label style={{ display: "block", fontFamily: "'Lato',sans-serif", font
 <input style={{ width: "100%", padding: "11px 14px", border: `1.5px sol
@@ -566,7 +566,7 @@ onBlur={(e) => (e.target.style.borderColor = T.border)} />
 ))}
 <div style={{ gridColumn: `span ${mob ? "1" : "2"}` }}>
 <button onClick={() => setOk(true)} style={{ width: "100%", background: `
-Confirmar Pedido · {fmt(totVal)}
+Confirmar Pedido ? {fmt(totVal)}
 </button>
 </div>
 </div>
@@ -605,7 +605,7 @@ color:
 </div>
 );
 };
-// ─── SIDEBAR ──────────────────────────────────────────────────────────────────
+// --- SIDEBAR ------------------------------------------------------------------
 const Sidebar = ({ cat, setCat, mobile, onClose }) => {
 const counts = { destaques: PRODUTOS.filter((p) => p.destaque).length };
 CATS.forEach((c) => { if (c.id !== "destaques") counts[c.id] = PRODUTOS.filter((p) => p.cat
@@ -641,12 +641,12 @@ onMouseLeave={(e) => { if (!ativa) e.currentTarget.style.background = "transpar
 </button>
 );
 })}
-{/* Condições */}
+{/* Condicoes */}
 <div style={{ margin: "20px 12px 0", padding: "14px", background: T.bg2, border: `1px
 <div style={{ fontFamily: "'Lato',sans-serif", fontSize: 9, letterSpacing: 2, color
-Condições
+Condicoes
 </div>
-{[["Pedido mín.", "6 peças"], ["Pagamento", "PIX ou Cartão"]].map(([k, v]) => (
+{[["Pedido min.", "6 pecas"], ["Pagamento", "PIX ou Cartao"]].map(([k, v]) => (
 <div key={k} style={{ display: "flex", justifyContent: "space-between", marginBot
 <span style={{ fontFamily: "'Lato',sans-serif", fontSize: 11, color: T.ink2, fo
 <span style={{ fontFamily: "'Lato',sans-serif", fontSize: 10, color: T.ink3 }}>
@@ -657,17 +657,7 @@ Condições
 </div>
 );
 };
-// ─── APP PRINCIPAL ────────────────────────────────────────────────────────────
-// ─── STORAGE (produtos do admin) ─────────────────────────────────────────────
-const STORAGE_KEY = "galene_produtos_v1";
-function getProdutos() {
-if (typeof window === "undefined") return PRODUTOS;
-try {
-const raw = localStorage.getItem(STORAGE_KEY);
-if (raw) return JSON.parse(raw);
-} catch {}
-return PRODUTOS;
-}
+// --- APP PRINCIPAL ------------------------------------------------------------
 export default function GaleneStore() {
 const w = useWindowWidth();
 const mob = w < 900;
@@ -677,15 +667,8 @@ const [cart, setCart] = useState([]);
 const [view, setView] = useState("loja");
 const [drawer, setDrawer] = useState(false);
 const [toast, setToast] = useState(null);
-const [catalogoProdutos, setCatalogoProdutos] = useState(PRODUTOS);
-useEffect(() => {
-setCatalogoProdutos(getProdutos());
-const onStorage = () => setCatalogoProdutos(getProdutos());
-window.addEventListener("storage", onStorage);
-return () => window.removeEventListener("storage", onStorage);
-}, []);
 const totPcs = cart.reduce((s, i) => s + i.sel.reduce((a, x) => a + x.qtd, 0), 0);
-const prods = cat === "destaques" ? catalogoProdutos.filter((p) => p.destaque) : catalogoPr
+const prods = cat === "destaques" ? PRODUTOS.filter((p) => p.destaque) : PRODUTOS.filter((p
 const addToCart = useCallback((prod, sel) => {
 setCart((prev) => {
 const idx = prev.findIndex((i) => i.id === prod.id);
@@ -703,7 +686,7 @@ return up;
 return [...prev, { ...prod, sel }];
 });
 const n = sel.reduce((a, s) => a + s.qtd, 0);
-setToast(`${n} peça${n > 1 ? "s" : ""} de "${prod.nome}" adicionada${n > 1 ? "s" : setTimeout(() => setToast(null), 3500);
+setToast(`${n} peca${n > 1 ? "s" : ""} de "${prod.nome}" adicionada${n > 1 ? "s" : setTimeout(() => setToast(null), 3500);
 }, []);
 ""}!`)
 const handleFinish = useCallback(() => {
@@ -731,7 +714,7 @@ input{font-size:16px!important;-webkit-appearance:none}
 `}</style>
 {/* Toast */}
 {toast && (
-<div className="toast" style={{ position: "fixed", top: 20, right: 20, zIndex: <span style={{ color: T.jade, fontSize: 16 }}>✓</span>{toast}
+<div className="toast" style={{ position: "fixed", top: 20, right: 20, zIndex: <span style={{ color: T.jade, fontSize: 16 }}>?</span>{toast}
 </div>
 9999,
 )}
@@ -747,7 +730,7 @@ input{font-size:16px!important;-webkit-appearance:none}
 {/* HEADER */}
 <header style={{ position: "sticky", top: 0, zIndex: 400, background: T.panel, borderBo
 <div style={{ background: `linear-gradient(135deg,${T.goldDk},${T.gold},${T.goldDk})`
-✦ ATACADO · PIX E CARTÃO · PEDIDO MÍNIMO 6 PEÇAS ✦
+? ATACADO ? PIX E CARTAO ? PEDIDO MINIMO 6 PECAS ?
 </div>
 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between",
 {mob && (
@@ -769,19 +752,19 @@ return <circle key={i} cx={40 + r * Math.cos(rad)} cy={40 + r * Math.sin(rad)
 })}
 </svg>
 <div>
+</div>
+</div>
 <div style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: mob ? 20 : 26
 {!mob && <div style={{ fontFamily: "'Lato',sans-serif", fontSize: 8.5, letterSp
-</div>
-</div>
 {/* Nav direita */}
 <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
 {!mob && (
 <button onClick={() => { setView("loja"); setCat("destaques"); }} style={{ back
-CATÁLOGO
+CATALOGO
 </button>
 )}
 <button onClick={() => setView("carrinho")} style={{ background: view === "carrin
-<span style={{ fontSize: 18 }}> </span>
+<span style={{ fontSize: 18 }}>?</span>
 {!mob && "Pedido"}
 {totPcs > 0 && (
 <span style={{ background: T.gold, color: "white", borderRadius: "50%", width
@@ -810,24 +793,24 @@ overfl
 )}
 minWid
 {/* Main */}
-<main style={{ flex: 1, padding: mob ? "14px 12px 100px" : "28px 32px 60px", {/* Hero banner — Destaques */}
+<main style={{ flex: 1, padding: mob ? "14px 12px 100px" : "28px 32px 60px", {/* Hero banner ? Destaques */}
 {cat === "destaques" && (
 <div style={{ background: `linear-gradient(135deg,${T.bg2},${T.bg3})`, borderRa
 <div style={{ position: "absolute", right: mob ? 16 : 40, top: "50%", transfo
 <div style={{ position: "relative" }}>
 <div style={{ fontFamily: "'Lato',sans-serif", fontSize: 9.5, letterSpacing
-Coleção Atual
+Colecao Atual
 </div>
 <h1 style={{ margin: "0 0 8px", fontFamily: "'Cormorant Garamond',serif", f
 Destaques Galene
 </h1>
 <div style={{ fontFamily: "'Lato',sans-serif", fontSize: 11, color: T.ink3,
-Peças selecionadas · Atacado feminino
+Pecas selecionadas ? Atacado feminino
 </div>
 </div>
 </div>
 )}
-{/* Título categoria */}
+{/* Titulo categoria */}
 {cat !== "destaques" && (
 <div style={{ marginBottom: 22, paddingBottom: 16, borderBottom: `1px solid ${T
 <div style={{ display: "flex", alignItems: "baseline", gap: 14 }}>
@@ -864,9 +847,9 @@ T.ink4
 {mob && view !== "carrinho" && (
 <nav style={{ position: "fixed", bottom: 0, left: 0, right: 0, background: T.panel, b
 {[
-["menu", "☰", "Menu", () => setDrawer(true)],
-["loja", "◈", "Catálogo", () => { setView("loja"); setCat("destaques"); }],
-["carrinho", " ", "Pedido", () => setView("carrinho")],
+["menu", "?", "Menu", () => setDrawer(true)],
+["loja", "+", "Catalogo", () => { setView("loja"); setCat("destaques"); }],
+["carrinho", "?", "Pedido", () => setView("carrinho")],
 ].map(([v, icon, label, action]) => (
 <button key={v} onClick={action} style={{ flex: 1, background: "none", border: "n
 <span style={{ fontSize: 20 }}>{icon}</span>

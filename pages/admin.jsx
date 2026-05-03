@@ -1,431 +1,281 @@
 import React, { useState, useEffect } from 'react';
 
 const AdminPage = () => {
-  const [loggedIn, setLoggedIn] = useState(false);
-  const [showModal, setShowModal] = useState(false);
-  const [formData, setFormData] = useState({
-    id: '',
+  const initialFormData = {
     nome: '',
     cat: '',
-    sub: '',
+    sub: 'Casual',
     preco: '',
-    desconto: 0,
+    desconto: '',
     destaque: false,
     tag: '',
     cores: '',
     tamanhos: '',
     desc: '',
     foto: ''
-  });
+  };
+
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
   const [products, setProducts] = useState([]);
-  const [filters, setFilters] = useState({ search: '', catFilter: '', subFilter: '' });
-  const [toasts, setToasts] = useState([]);
-  const [uniqueCats, setUniqueCats] = useState([]);
+  const [editingProduct, setEditingProduct] = useState(null);
+  const [formData, setFormData] = useState(initialFormData);
 
-  const theme = {
-    primary: '#B8935A',
-    primaryDark: '#8E6F42',
-    bg: '#f8f9fa',
-    text: '#333',
-    border: '#ddd',
-    white: '#fff',
-    success: '#28a745',
-    danger: '#dc3545',
-    shadow: '0 2px 10px rgba(0,0,0,0.1)'
+  const saveProducts = (prods) => {
+    localStorage.setItem('galeneProducts', JSON.stringify(prods));
+    setProducts(prods);
   };
 
-  const PRODUCTS_KEY = 'galeneProducts';
-  const AUTH_KEY = 'galeneAdmin';
-
-  // Initial products generator
-  const generateInitialProducts = () => {
-    const productGroups = [
-      { cat: 'Blusas', sub: '', nomes: ['Caja', 'Bagda', 'Julia', 'Yasmin'] },
-      { cat: 'Regatas', sub: '', nomes: ['Ellen'] },
-      { cat: 'Cardigans', sub: '', nomes: ['Canelado', 'Luxor'] },
-      { cat: 'Conjuntos', sub: '', nomes: ['Dallas', 'Dani', 'Tiffany', 'Tiffany Moletinho', 'Chantal Calça', 'Chantal'] },
-      { cat: 'Macacões', sub: '', nomes: ['Kami'] },
-      { cat: 'Calças', sub: '', nomes: ['Pantalona'] },
-      { cat: 'Vestidos', sub: 'Viscolaycra', nomes: ['Bella', 'Eva', 'Safira', 'Naomi', 'Mara', 'Ariel', 'Nina', 'Atenas', 'Brisa', 'Luana', 'Treviso', 'Lisa', 'Rio', 'Giane', 'Paty', 'Star', 'Elisa', 'Caja', 'Listrado', 'Modena', 'Tami', 'Camila', 'Azaleia', 'Ellen', 'Pamela', 'Mia', 'Saara', 'Rafa', 'Clara', 'Rubi', 'Milano', 'Kim', 'Nicole', 'Paris', 'Milena', 'Aurora', 'Lorena Manga Longa', 'Laila', 'Kenya', 'Marina', 'Pandora', 'Lorena Manga Curta', 'Itália', 'Allegra', 'Lola'] },
-      { cat: 'Vestidos', sub: 'Lanzinha', nomes: ['Itália Lanzinha', 'Mônica Lanzinha Manga Longa', 'Monica Lanzinha'] },
-      { cat: 'Vestidos', sub: 'Moletinho', nomes: ['Mônica Moletinho', 'Pandora Moletinho', 'Italia Moletinho'] }
-    ];
-
-    const initial = [];
-    let idCounter = 1;
-    productGroups.forEach(group => {
-      const basePreco = group.cat === 'Vestidos' ? 149.90 : group.cat === 'Conjuntos' ? 179.90 : group.cat === 'Blusas' || group.cat === 'Regatas' ? 89.90 : 129.90;
-      group.nomes.forEach(nome => {
-        const preco = (basePreco + (Math.floor(Math.random() * 401) - 200) / 100).toFixed(2);
-        const desconto = Math.floor(Math.random() * 5) * 5; // 0,5,10,15,20
-        const destaque = Math.random() > 0.8;
-        const tag = desconto > 10 ? 'Promo' : Math.random() > 0.7 ? 'Novo' : '';
-        const cores = ['Preto', 'Bege', 'Branco', 'Azul', 'Caramelo'].sort(() => Math.random() - 0.5).slice(0, 4);
-        const tamanhos = ['PP', 'P', 'M', 'G', 'GG'];
-        const desc = `${group.cat} ${nome} - peça confortável e estilosa, perfeita para o dia a dia ou ocasiões especiais. Qualidade GALENE.`;
-        const fotoText = nome.replace(/\s+/g, '+');
-        const foto = `https://placehold.co/400x500/b8935a/ffffff?text=${fotoText}&font=roboto`;
-        initial.push({
-          id: idCounter++,
+  const loadProducts = () => {
+    const savedProducts = localStorage.getItem('galeneProducts');
+    if (!savedProducts) {
+      const productNames = [
+        'Vestido Bella', 'Vestido Eva', 'Vestido Safira', 'Vestido Naomi', 'Vestido Mara',
+        'Vestido Ariel', 'Vestido Nina', 'Vestido Lola', 'Conjunto Dallas', 'Conjunto Dani',
+        'Macacão Kami', 'Blusa Caja', 'Regata Ellen', 'Cardigan Canelado', 'Calça Pantalona',
+        'Vestido Atenas', 'Vestido Brisa', 'Vestido Luana', 'Vestido Treviso', 'Vestido Lisa'
+      ];
+      const initialProducts = productNames.map((nome, i) => {
+        const id = i + 1;
+        let cat = 'Vestidos';
+        if (nome.includes('Conjunto')) cat = 'Conjuntos';
+        else if (nome.includes('Macacão')) cat = 'Macacões';
+        else if (nome.includes('Blusa')) cat = 'Blusas';
+        else if (nome.includes('Regata')) cat = 'Regatas';
+        else if (nome.includes('Cardigan')) cat = 'Cardigans';
+        else if (nome.includes('Calça')) cat = 'Calças';
+        const fotoText = nome.replace(/ /g, '+');
+        return {
+          id,
           nome,
-          cat: group.cat,
-          sub: group.sub,
-          preco: parseFloat(preco),
-          desconto,
-          destaque,
-          tag,
-          cores,
-          tamanhos,
-          desc,
-          foto
-        });
+          cat,
+          sub: 'Casual',
+          preco: 150 + (id * 2.5),
+          desconto: id % 5 === 0 ? 20 : 0,
+          destaque: id % 2 === 0,
+          tag: id % 3 === 0 ? 'Novo' : '',
+          cores: ['Preto', 'Branco', id > 10 ? 'Azul' : 'Vermelho'],
+          tamanhos: ['P', 'M', 'G', 'GG'],
+          desc: `Descrição do ${nome}. Produto de alta qualidade.`,
+          foto: `https://via.placeholder.com/300x400/FF69B4/FFFFFF?text=${fotoText}`
+        };
       });
-    });
-    return initial;
-  };
-
-  useEffect(() => {
-    const savedAuth = localStorage.getItem(AUTH_KEY);
-    if (savedAuth) setLoggedIn(true);
-
-    const savedProducts = localStorage.getItem(PRODUCTS_KEY);
-    if (savedProducts) {
-      setProducts(JSON.parse(savedProducts));
+      localStorage.setItem('galeneProducts', JSON.stringify(initialProducts));
+      setProducts(initialProducts);
     } else {
-      const initial = generateInitialProducts();
-      setProducts(initial);
+      setProducts(JSON.parse(savedProducts));
     }
-  }, []);
-
-  useEffect(() => {
-    localStorage.setItem(PRODUCTS_KEY, JSON.stringify(products));
-    setUniqueCats([...new Set(products.map(p => p.cat))].sort());
-  }, [products]);
-
-  useEffect(() => {
-    if (toasts.length > 0) {
-      const timer = setTimeout(() => setToasts([]), 5000);
-      return () => clearTimeout(timer);
-    }
-  }, [toasts]);
-
-  const addToast = (msg, type = 'success') => {
-    setToasts(prev => [...prev.slice(-4), { msg, type }]);
   };
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      loadProducts();
+    }
+  }, [isAuthenticated]);
 
   const handleLogin = (e) => {
     e.preventDefault();
-    const user = e.target.user.value;
-    const pass = e.target.pass.value;
-    if (user === 'admin' && pass === 'galene2024') {
-      setLoggedIn(true);
-      localStorage.setItem(AUTH_KEY, 'true');
-      addToast('Login realizado com sucesso!');
+    if (username === 'admin' && password === '1234') {
+      setIsAuthenticated(true);
+      setUsername('');
+      setPassword('');
     } else {
-      addToast('Credenciais inválidas!', 'error');
+      alert('Credenciais inválidas! Use: admin / 1234');
     }
   };
 
-  const handleLogout = () => {
-    setLoggedIn(false);
-    localStorage.removeItem(AUTH_KEY);
-    addToast('Logout realizado.');
-  };
-
-  const openAdd = () => {
-    setFormData({
-      id: '', nome: '', cat: '', sub: '', preco: '', desconto: 0, destaque: false, tag: '',
-      cores: 'Preto, Bege, Branco', tamanhos: 'P, M, G, GG', desc: '', foto: ''
-    });
-    setShowModal(true);
-  };
-
-  const openEdit = (product) => {
-    setFormData({
-      ...product,
-      cores: product.cores.join(', '),
-      tamanhos: product.tamanhos.join(', ')
-    });
-    setShowModal(true);
-  };
-
-  const handleDelete = (id) => {
-    if (confirm('Confirma exclusão do produto?')) {
-      setProducts(prev => prev.filter(p => p.id !== id));
-      addToast('Produto excluído!');
-    }
+  const handleInputChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : value
+    }));
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    const processed = {
-      ...formData,
+    const prodData = {
+      nome: formData.nome,
+      cat: formData.cat,
+      sub: formData.sub,
       preco: parseFloat(formData.preco) || 0,
-      desconto: parseFloat(formData.desconto) || 0,
-      destaque: !!formData.destaque,
-      cores: formData.cores.split(',').map(c => c.trim()).filter(Boolean),
-      tamanhos: formData.tamanhos.split(',').map(t => t.trim()).filter(Boolean)
+      desconto: parseInt(formData.desconto) || 0,
+      destaque: formData.destaque === true,
+      tag: formData.tag,
+      cores: formData.cores ? formData.cores.split(',').map(c => c.trim()).filter(Boolean) : [],
+      tamanhos: formData.tamanhos ? formData.tamanhos.split(',').map(t => t.trim()).filter(Boolean) : [],
+      desc: formData.desc,
+      foto: formData.foto
     };
 
-    const err = validateForm(processed);
-    if (err) {
-      addToast(err, 'error');
-      return;
-    }
-
-    if (processed.id) {
-      setProducts(prev => prev.map(p => p.id === processed.id ? processed : p));
-      addToast('Produto atualizado com sucesso!');
+    let updatedProducts;
+    if (editingProduct) {
+      prodData.id = editingProduct.id;
+      updatedProducts = products.map(p => p.id === editingProduct.id ? prodData : p);
     } else {
-      const newProduct = { ...processed, id: Date.now().toString() };
-      setProducts(prev => [...prev, newProduct]);
-      addToast('Produto adicionado com sucesso!');
+      prodData.id = products.length > 0 ? Math.max(...products.map(p => p.id)) + 1 : 1;
+      updatedProducts = [...products, prodData];
     }
-    setShowModal(false);
-    setFormData({ id: '', nome: '', cat: '', sub: '', preco: '', desconto: 0, destaque: false, tag: '', cores: '', tamanhos: '', desc: '', foto: '' });
+    saveProducts(updatedProducts);
+    setFormData(initialFormData);
+    setEditingProduct(null);
   };
 
-  const validateForm = (data) => {
-    if (!data.nome.trim()) return 'Nome é obrigatório.';
-    if (!data.cat.trim()) return 'Categoria é obrigatória.';
-    if (data.preco <= 0 || isNaN(data.preco)) return 'Preço deve ser maior que 0.';
-    if (data.desconto < 0 || isNaN(data.desconto)) return 'Desconto inválido.';
-    if (data.cores.length === 0) return 'Informe pelo menos uma cor.';
-    if (data.tamanhos.length === 0) return 'Informe pelo menos um tamanho.';
-    return null;
+  const editProduct = (prod) => {
+    setEditingProduct(prod);
+    setFormData({
+      nome: prod.nome,
+      cat: prod.cat,
+      sub: prod.sub,
+      preco: prod.preco,
+      desconto: prod.desconto,
+      destaque: prod.destaque,
+      tag: prod.tag,
+      cores: prod.cores.join(', '),
+      tamanhos: prod.tamanhos.join(', '),
+      desc: prod.desc,
+      foto: prod.foto
+    });
   };
 
-  const filteredProducts = products.filter(p =>
-    p.nome.toLowerCase().includes(filters.search.toLowerCase()) &&
-    (filters.catFilter === '' || p.cat === filters.catFilter) &&
-    (filters.subFilter === '' || p.sub.toLowerCase().includes(filters.subFilter.toLowerCase()))
-  );
-
-  const toastStyle = (type) => ({
-    backgroundColor: type === 'error' ? theme.danger : theme.success,
-    color: theme.white,
-    padding: '12px 20px',
-    marginBottom: '10px',
-    borderRadius: '5px',
-    boxShadow: theme.shadow,
-    maxWidth: '400px'
-  });
-
-  const btnStyle = (bg = theme.primary, color = theme.white) => ({
-    backgroundColor: bg,
-    color,
-    border: 'none',
-    padding: '10px 20px',
-    borderRadius: '5px',
-    cursor: 'pointer',
-    fontSize: '14px',
-    margin: '5px',
-    boxShadow: theme.shadow
-  });
-
-  const inputStyle = {
-    padding: '10px',
-    border: `1px solid ${theme.border}`,
-    borderRadius: '5px',
-    margin: '5px 0',
-    width: '100%',
-    boxSizing: 'border-box'
+  const deleteProduct = (id) => {
+    if (confirm('Tem certeza que deseja deletar este produto?')) {
+      const updated = products.filter(p => p.id !== id);
+      saveProducts(updated);
+    }
   };
 
-  const pageStyle = {
-    maxWidth: '1400px',
-    margin: '0 auto',
-    padding: '20px',
-    fontFamily: 'Arial, sans-serif',
-    backgroundColor: theme.bg,
-    minHeight: '100vh'
-  };
-
-  if (!loggedIn) {
+  if (!isAuthenticated) {
     return (
-      <div style={pageStyle}>
-        <div style={{ maxWidth: '400px', margin: '100px auto', padding: '40px', backgroundColor: theme.white, borderRadius: '10px', boxShadow: theme.shadow }}>
-          <h2 style={{ color: theme.primary, textAlign: 'center' }}>Admin GALENE</h2>
-          <form onSubmit={handleLogin}>
-            <div>
-              <label>Usuário:</label>
-              <input name="user" type="text" style={inputStyle} required />
-            </div>
-            <div>
-              <label>Senha:</label>
-              <input name="pass" type="password" style={inputStyle} required />
-            </div>
-            <button type="submit" style={btnStyle()}>Entrar</button>
-          </form>
-        </div>
+      <div style={{ padding: '40px', maxWidth: '400px', margin: '0 auto', textAlign: 'center' }}>
+        <h2>Login Admin</h2>
+        <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          <input
+            name="username"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            placeholder="Usuário"
+            style={{ padding: '10px', fontSize: '16px' }}
+            required
+          />
+          <input
+            name="password"
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="Senha"
+            style={{ padding: '10px', fontSize: '16px' }}
+            required
+          />
+          <button type="submit" style={{ padding: '10px', fontSize: '16px', background: '#007bff', color: 'white', border: 'none', cursor: 'pointer' }}>
+            Entrar
+          </button>
+        </form>
       </div>
     );
   }
 
   return (
-    <div style={pageStyle}>
-      {/* Toasts */}
-      <div style={{ position: 'fixed', top: '20px', right: '20px', zIndex: 1000 }}>
-        {toasts.map((toast, i) => (
-          <div key={i} style={toastStyle(toast.type)}>
-            {toast.msg}
-          </div>
-        ))}
-      </div>
-
-      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px', paddingBottom: '20px', borderBottom: `2px solid ${theme.primary}` }}>
-        <h1 style={{ color: theme.primary, margin: 0, fontSize: '28px' }}>Admin GALENE - Catálogo Completo</h1>
-        <button onClick={handleLogout} style={btnStyle(theme.danger, theme.white)}>Logout</button>
-      </header>
-
-      {/* Filters */}
-      <div style={{ display: 'flex', gap: '20px', marginBottom: '20px', flexWrap: 'wrap' }}>
-        <input
-          placeholder="Buscar por nome..."
-          value={filters.search}
-          onChange={e => setFilters({ ...filters, search: e.target.value })}
-          style={{ ...inputStyle, width: '250px', padding: '12px' }}
-        />
-        <select
-          value={filters.catFilter}
-          onChange={e => setFilters({ ...filters, catFilter: e.target.value })}
-          style={{ ...inputStyle, width: '200px', padding: '12px' }}
+    <div style={{ padding: '20px', maxWidth: '1400px', margin: '0 auto' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+        <h1>Admin - Produtos GALENE</h1>
+        <button
+          onClick={() => setIsAuthenticated(false)}
+          style={{ padding: '8px 16px', background: '#dc3545', color: 'white', border: 'none', cursor: 'pointer' }}
         >
-          <option value="">Todas Categorias</option>
-          {uniqueCats.map(cat => <option key={cat} value={cat}>{cat}</option>)}
-        </select>
-        <input
-          placeholder="Filtro subcategoria..."
-          value={filters.subFilter}
-          onChange={e => setFilters({ ...filters, subFilter: e.target.value })}
-          style={{ ...inputStyle, width: '200px', padding: '12px' }}
-        />
-        <button onClick={openAdd} style={btnStyle()}>+ Adicionar Produto</button>
+          Sair
+        </button>
       </div>
 
-      {/* Table */}
-      <div style={{ overflowX: 'auto' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse', backgroundColor: theme.white, boxShadow: theme.shadow, borderRadius: '10px' }}>
-          <thead>
-            <tr style={{ backgroundColor: theme.primary, color: theme.white }}>
-              <th style={{ padding: '15px', textAlign: 'left' }}>Nome</th>
-              <th style={{ padding: '15px', textAlign: 'left' }}>Cat / Sub</th>
-              <th style={{ padding: '15px', textAlign: 'left' }}>Preço</th>
-              <th style={{ padding: '15px', textAlign: 'left' }}>Desconto</th>
-              <th style={{ padding: '15px', textAlign: 'left' }}>Destaque</th>
-              <th style={{ padding: '15px', textAlign: 'left' }}>Foto</th>
-              <th style={{ padding: '15px', textAlign: 'center' }}>Ações</th>
+      <div style={{ marginBottom: '30px' }}>
+        <h2>{editingProduct ? `Editar ${editingProduct.nome}` : 'Adicionar Novo Produto'}</h2>
+        <form onSubmit={handleSubmit} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '10px', marginBottom: '20px' }}>
+          <input name="nome" value={formData.nome} onChange={handleInputChange} placeholder="Nome" style={{ padding: '8px' }} required />
+          <input name="cat" value={formData.cat} onChange={handleInputChange} placeholder="Categoria" style={{ padding: '8px' }} required />
+          <input name="sub" value={formData.sub} onChange={handleInputChange} placeholder="Subcategoria" style={{ padding: '8px' }} />
+          <input name="preco" type="number" step="0.01" value={formData.preco} onChange={handleInputChange} placeholder="Preço" style={{ padding: '8px' }} />
+          <input name="desconto" type="number" value={formData.desconto} onChange={handleInputChange} placeholder="Desconto %" style={{ padding: '8px' }} />
+          <label style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+            <input name="destaque" type="checkbox" checked={formData.destaque} onChange={handleInputChange} />
+            Destaque
+          </label>
+          <input name="tag" value={formData.tag} onChange={handleInputChange} placeholder="Tag" style={{ padding: '8px' }} />
+          <input name="cores" value={formData.cores} onChange={handleInputChange} placeholder="Cores (Preto, Branco)" style={{ padding: '8px' }} />
+          <input name="tamanhos" value={formData.tamanhos} onChange={handleInputChange} placeholder="Tamanhos (P, M, G)" style={{ padding: '8px' }} />
+          <textarea
+            name="desc"
+            value={formData.desc}
+            onChange={handleInputChange}
+            placeholder="Descrição"
+            style={{ padding: '8px', gridColumn: '1 / -1', minHeight: '60px' }}
+          />
+          <input name="foto" value={formData.foto} onChange={handleInputChange} placeholder="URL da foto" style={{ padding: '8px', gridColumn: '1 / -1' }} />
+          <button
+            type="submit"
+            style={{ padding: '10px', background: '#28a745', color: 'white', border: 'none', cursor: 'pointer', gridColumn: '1 / -1' }}
+          >
+            {editingProduct ? 'Atualizar' : 'Adicionar Produto'}
+          </button>
+          {editingProduct && (
+            <button
+              type="button"
+              onClick={() => {
+                setEditingProduct(null);
+                setFormData(initialFormData);
+              }}
+              style={{ padding: '10px', background: '#6c757d', color: 'white', border: 'none', cursor: 'pointer', gridColumn: '1 / -1' }}
+            >
+              Cancelar
+            </button>
+          )}
+        </form>
+      </div>
+
+      <h2>Lista de Produtos ({products.length})</h2>
+      <table style={{ width: '100%', borderCollapse: 'collapse', border: '1px solid #ddd' }}>
+        <thead>
+          <tr style={{ backgroundColor: '#f8f9fa' }}>
+            <th style={{ border: '1px solid #ddd', padding: '12px', textAlign: 'left' }}>ID</th>
+            <th style={{ border: '1px solid #ddd', padding: '12px', textAlign: 'left' }}>Nome</th>
+            <th style={{ border: '1px solid #ddd', padding: '12px', textAlign: 'left' }}>Cat</th>
+            <th style={{ border: '1px solid #ddd', padding: '12px', textAlign: 'left' }}>Preço</th>
+            <th style={{ border: '1px solid #ddd', padding: '12px', textAlign: 'left' }}>Desconto</th>
+            <th style={{ border: '1px solid #ddd', padding: '12px', textAlign: 'left' }}>Destaque</th>
+            <th style={{ border: '1px solid #ddd', padding: '12px', textAlign: 'left' }}>Foto</th>
+            <th style={{ border: '1px solid #ddd', padding: '12px', textAlign: 'left' }}>Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          {products.map((prod) => (
+            <tr key={prod.id} style={{ borderBottom: '1px solid #ddd' }}>
+              <td style={{ border: '1px solid #ddd', padding: '12px' }}>{prod.id}</td>
+              <td style={{ border: '1px solid #ddd', padding: '12px' }}>{prod.nome}</td>
+              <td style={{ border: '1px solid #ddd', padding: '12px' }}>{prod.cat}</td>
+              <td style={{ border: '1px solid #ddd', padding: '12px' }}>R$ {prod.preco.toFixed(2)}</td>
+              <td style={{ border: '1px solid #ddd', padding: '12px' }}>{prod.desconto}%</td>
+              <td style={{ border: '1px solid #ddd', padding: '12px' }}>{prod.destaque ? 'Sim' : 'Não'}</td>
+              <td style={{ border: '1px solid #ddd', padding: '12px' }}>
+                <img src={prod.foto} alt={prod.nome} style={{ width: '60px', height: 'auto', borderRadius: '4px' }} />
+              </td>
+              <td style={{ border: '1px solid #ddd', padding: '12px' }}>
+                <button
+                  onClick={() => editProduct(prod)}
+                  style={{ margin: '2px', padding: '6px 12px', background: '#007bff', color: 'white', border: 'none', cursor: 'pointer', borderRadius: '4px' }}
+                >
+                  Editar
+                </button>
+                <button
+                  onClick={() => deleteProduct(prod.id)}
+                  style={{ margin: '2px', padding: '6px 12px', background: '#dc3545', color: 'white', border: 'none', cursor: 'pointer', borderRadius: '4px' }}
+                >
+                  Deletar
+                </button>
+              </td>
             </tr>
-          </thead>
-          <tbody>
-            {filteredProducts.map(product => (
-              <tr key={product.id} style={{ borderBottom: `1px solid ${theme.border}` }}>
-                <td style={{ padding: '15px' }}>{product.nome}</td>
-                <td style={{ padding: '15px' }}>
-                  {product.cat}<br/>
-                  <small>{product.sub}</small>
-                </td>
-                <td style={{ padding: '15px' }}>R$ {product.preco.toFixed(2)}</td>
-                <td style={{ padding: '15px' }}>{product.desconto > 0 ? `${product.desconto}%` : '-'}</td>
-                <td style={{ padding: '15px' }}>{product.destaque ? 'Sim' : 'Não'}</td>
-                <td style={{ padding: '15px' }}>
-                  <img src={product.foto} alt={product.nome} style={{ width: '50px', height: '50px', objectFit: 'cover', borderRadius: '5px' }} />
-                </td>
-                <td style={{ padding: '15px', textAlign: 'center' }}>
-                  <button onClick={() => openEdit(product)} style={btnStyle(theme.primaryDark)}>Editar</button>
-                  <button onClick={() => handleDelete(product.id)} style={btnStyle(theme.danger, theme.white)}>Excluir</button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-      <p style={{ textAlign: 'center', marginTop: '20px', color: theme.text }}>
-        Total: {filteredProducts.length} / {products.length} produtos
-      </p>
-
-      {/* Modal */}
-      {showModal && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: 'rgba(0,0,0,0.5)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 999
-        }}>
-          <div style={{
-            backgroundColor: theme.white,
-            padding: '30px',
-            borderRadius: '10px',
-            maxWidth: '600px',
-            maxHeight: '90vh',
-            overflowY: 'auto',
-            boxShadow: theme.shadow,
-            width: '90%'
-          }}>
-            <h2 style={{ color: theme.primary, marginTop: 0 }}>
-              {formData.id ? 'Editar' : 'Adicionar'} Produto
-            </h2>
-            <form onSubmit={handleSubmit}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
-                <div>
-                  <label>Nome:</label>
-                  <input value={formData.nome} onChange={e => setFormData({ ...formData, nome: e.target.value })} style={inputStyle} required />
-                </div>
-                <div>
-                  <label>Categoria:</label>
-                  <input value={formData.cat} onChange={e => setFormData({ ...formData, cat: e.target.value })} style={inputStyle} required />
-                </div>
-                <div>
-                  <label>Subcategoria:</label>
-                  <input value={formData.sub} onChange={e => setFormData({ ...formData, sub: e.target.value })} style={inputStyle} />
-                </div>
-                <div>
-                  <label>Preço (R$):</label>
-                  <input type="number" step="0.01" value={formData.preco} onChange={e => setFormData({ ...formData, preco: e.target.value })} style={inputStyle} required />
-                </div>
-                <div>
-                  <label>Desconto (%):</label>
-                  <input type="number" min="0" step="1" value={formData.desconto} onChange={e => setFormData({ ...formData, desconto: e.target.value })} style={inputStyle} />
-                </div>
-                <div>
-                  <label>Destaque:</label>
-                  <input type="checkbox" checked={formData.destaque} onChange={e => setFormData({ ...formData, destaque: e.target.checked })} style={{ marginTop: '10px' }} />
-                </div>
-                <div>
-                  <label>Tag:</label>
-                  <input value={formData.tag} onChange={e => setFormData({ ...formData, tag: e.target.value })} style={inputStyle} />
-                </div>
-              </div>
-              <div>
-                <label>Cores (separadas por vírgula):</label>
-                <input value={formData.cores} onChange={e => setFormData({ ...formData, cores: e.target.value })} style={{ ...inputStyle, height: '50px' }} placeholder="Preto, Bege, Branco" required />
-              </div>
-              <div>
-                <label>Tamanhos (separados por vírgula):</label>
-                <input value={formData.tamanhos} onChange={e => setFormData({ ...formData, tamanhos: e.target.value })} style={{ ...inputStyle, height: '50px' }} placeholder="P, M, G, GG" required />
-              </div>
-              <div>
-                <label>Descrição:</label>
-                <textarea value={formData.desc} onChange={e => setFormData({ ...formData, desc: e.target.value })} style={{ ...inputStyle, height: '80px' }} />
-              </div>
-              <div>
-                <label>Foto URL:</label>
-                <input value={formData.foto} onChange={e => setFormData({ ...formData, foto: e.target.value })} style={inputStyle} placeholder="https://..." />
-              </div>
-              <div style={{ textAlign: 'right', marginTop: '20px' }}>
-                <button type="button" onClick={() => setShowModal(false)} style={btnStyle(theme.text, theme.primaryDark, '#f0f0f0')}>Cancelar</button>
-                <button type="submit" style={btnStyle()}>Salvar</button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 };

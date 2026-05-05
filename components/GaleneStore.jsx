@@ -888,45 +888,48 @@ export default function GaleneStore() {
                   </div>
                 </div>
               </div>
-                        {/* Titulo categoria */}
-            {cat !== "destaques" && (
-              <div style={{ marginBottom: 22, paddingBottom: 16, borderBottom: `1px solid ${T.border}` }}>
-                <div style={{ display: "flex", alignItems: "baseline", gap: 14 }}>
-                  <h2 style={{ margin: 0, fontFamily: "'Cormorant Garamond',serif", fontSize: mob ? 26 : 32, color: T.ink, fontWeight: 600 }}>
-                    {cat}
-                  </h2>
-                  <span style={{ fontFamily: "'Lato',sans-serif", fontSize: 11, color: T.ink4 }}>
-                    {produtosFiltrados.length} produtos
-                  </span>
-                </div>
-              </div>
-            )}
+                      import React from 'react';
 
-            {/* Grid destaques */}
-            {cat === "destaques" && (
-              <div className="fade" style={{ display: "grid", gridTemplateColumns: mob ? "1fr 1fr" : "repeat(auto-fill, minmax(260px, 1fr))", gap: mob ? 16 : 24 }}>
-                {carregando ? (
-                  <div style={{ color: T.gold, padding: '20px', textAlign: 'center', width: '100%' }}>Carregando destaques...</div>
-                ) : (
-                  produtos.filter(p => p.destaque && (cat === 'all' || p.cat === cat)).map(p => (
-                    <CardDest key={p.id} p={p} onOpen={() => { setSel(p); setView('modal'); }} />
-                  ))
-                )}
-              </div>
-            )}
+const GaleneStore = ({ produtosFiltrados, carregando, T, categoria }) => {
+  return (
+    <div className="galene-store">
+      {/* Titulo categoria */}
+      <div style={{ borderBottom: `1px solid ${T.border}` }}>
+        <h2>{categoria}</h2>
+        <span>{produtosFiltrados.length} produtos</span>
+      </div>
 
-            {/* Grid normal */}
-            {cat !== "destaques" && (
-              <div className="fade" style={{ display: "grid", gridTemplateColumns: mob ? "1fr 1fr" : "repeat(auto-fill, minmax(200px, 1fr))", gap: mob ? 12 : 16 }}>
-                {carregando ? (
-                  <div style={{ color: T.gold, padding: '40px', textAlign: 'center', width: '100%' }}>Carregando catálogo...</div>
-                ) : (
-                  produtosFiltrados.filter(p => !p.destaque).map(p => (
-                    <Card key={p.id} p={p} onOpen={() => { setSel(p); setView('modal'); }} />
-                  ))
-                )}
-              </div>
-            )}
+      {/* Grid destaques */}
+      {carregando ? (
+        <div>Carregando destaques...</div>
+      ) : (
+        <div className="grid-destaques">
+          {produtosFiltrados.slice(0, 4).map((produto) => (
+            <div key={produto.id} className="produto-destaque">
+              {produto.nome}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Grid normal */}
+      {carregando ? (
+        <div>Carregando produtos...</div>
+      ) : (
+        <div className="grid-normal">
+          {produtosFiltrados.slice(4).map((produto) => (
+            <div key={produto.id} className="produto-normal">
+              {produto.nome}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default GaleneStore;
+
           </main>
         </div>
       )}

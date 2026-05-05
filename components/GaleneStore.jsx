@@ -1,4 +1,15 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from 'react';
+import { supabase } from '../lib/supabaseClient';
+
+const GaleneStore = () => {
+  const [produtos, setProdutos] = useState([]);
+  const [carregando, setCarregando] = useState(true);
+  const [erro, setErro] = useState(null);
+
+  return null; // Placeholder - implement the component UI here
+};
+
+export default GaleneStore;
 
 // --- THEME --------------------------------------------------------------------
 const T = {

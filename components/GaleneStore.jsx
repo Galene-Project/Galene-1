@@ -904,18 +904,32 @@ export default function GaleneStore() {
               </div>
             )}
 
-            {/* Grid destaques */}
+                        {/* Grid destaques */}
             {cat === "destaques" && (
-              <div className="fade" style={{ display: "grid", gridTemplateColumns: mob ? "1fr" : "repeat(auto-fill, minmax(260px, 1fr))", gap: mob ? 16 : 20 }}>
+              <div className="fade" style={{ display: "grid", gridTemplateColumns: mob ? "1fr 1fr" : "repeat(auto-fill, minmax(260px, 1fr))", gap: mob ? 16 : 24 }}>
                 {carregando ? (
-  <div style={{ color: T.gold, padding: '20px', textAlign: 'center', width: '100%' }}>
-    Buscando destaques no banco de dados...
-  </div>
-) : (
-  produtos.filter(p => p.destaque && (cat === 'all' || p.cat === cat)).map(p => (
-    <CardDest key={p.id} p={p} onOpen={() => { setSel(p); setView('modal'); }} />
-  ))
-)}
+                  <div style={{ color: T.gold, padding: '20px', textAlign: 'center', width: '100%' }}>Carregando destaques...</div>
+                ) : (
+                  produtos.filter(p => p.destaque && (cat === 'all' || p.cat === cat)).map(p => (
+                    <CardDest key={p.id} p={p} onOpen={() => { setSel(p); setView('modal'); }} />
+                  ))
+                )}
+              </div>
+            )}
+
+            {/* Grid normal */}
+            {cat !== "destaques" && (
+              <div className="fade" style={{ display: "grid", gridTemplateColumns: mob ? "1fr 1fr" : "repeat(auto-fill, minmax(200px, 1fr))", gap: mob ? 12 : 16 }}>
+                {carregando ? (
+                  <div style={{ color: T.gold, padding: '40px', textAlign: 'center', width: '100%' }}>Carregando catálogo Galene...</div>
+                ) : (
+                  produtosFiltrados.filter(p => !p.destaque).map(p => (
+                    <Card key={p.id} p={p} onOpen={() => { setSel(p); setView('modal'); }} />
+                  ))
+                )}
+              </div>
+            )}
+          </main>
 
             {/* Grid normal */}
             {cat !== "destaques" && (

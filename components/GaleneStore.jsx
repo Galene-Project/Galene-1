@@ -930,22 +930,7 @@ export default function GaleneStore() {
               </div>
             )}
           </main>
-
-            {/* Grid normal */}
-            {cat !== "destaques" && (
-              <div className="fade" style={{ display: "grid", gridTemplateColumns: mob ? "1fr 1fr" : "repeat(auto-fill, minmax(200px, 1fr))", gap: mob ? 12 : 16 }}>
-                {carregando ? (
-  <div style={{ color: T.gold, padding: '40px', textAlign: 'center', width: '100%' }}>
-    Carregando catálogo Galene...
-  </div>
-) : (
-  produtosFiltrados.filter(p => !p.destaque).map(p => (
-    <Card key={p.id} p={p} onOpen={() => { setSel(p); setView('modal'); }} />
-  ))
-)}
-              </div>
-            )}
-          </main>
+            
         </div>
       )}
 

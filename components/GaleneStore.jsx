@@ -889,7 +889,7 @@ export default function GaleneStore() {
                 </div>
               </div>
 <main>
-            {/* Titulo categoria */}
+                        {/* Titulo categoria */}
             {cat !== "destaques" && (
               <div style={{ marginBottom: 22, paddingBottom: 16, borderBottom: `1px solid ${T.border}` }}>
                 <div style={{ display: "flex", alignItems: "baseline", gap: 14 }}>
@@ -907,7 +907,9 @@ export default function GaleneStore() {
             {cat === "destaques" && (
               <div className="fade" style={{ display: "grid", gridTemplateColumns: mob ? "1fr 1fr" : "repeat(auto-fill, minmax(260px, 1fr))", gap: mob ? 16 : 24 }}>
                 {carregando ? (
-                  <div style={{ color: T.gold, padding: '20px', textAlign: 'center', width: '100%' }}>Buscando destaques...</div>
+                  <div style={{ color: T.gold, padding: '20px', textAlign: 'center', width: '100%' }}>
+                    Carregando destaques...
+                  </div>
                 ) : (
                   produtos.filter(p => p.destaque && (cat === 'all' || p.cat === cat)).map(p => (
                     <CardDest key={p.id} p={p} onOpen={() => { setSel(p); setView('modal'); }} />
@@ -916,11 +918,14 @@ export default function GaleneStore() {
               </div>
             )}
 
+          
             {/* Grid normal */}
             {cat !== "destaques" && (
               <div className="fade" style={{ display: "grid", gridTemplateColumns: mob ? "1fr 1fr" : "repeat(auto-fill, minmax(200px, 1fr))", gap: mob ? 12 : 16 }}>
                 {carregando ? (
-                  <div style={{ color: T.gold, padding: '40px', textAlign: 'center', width: '100%' }}>Carregando catálogo completo...</div>
+                  <div style={{ color: T.gold, padding: '40px', textAlign: 'center', width: '100%' }}>
+                    Carregando catálogo completo...
+                  </div>
                 ) : (
                   produtosFiltrados.filter(p => !p.destaque).map(p => (
                     <Card key={p.id} p={p} onOpen={() => { setSel(p); setView('modal'); }} />
@@ -928,8 +933,7 @@ export default function GaleneStore() {
                 )}
               </div>
             )}
-          </main>
-          
+          </main>          
           </main>
         </div>
       )}

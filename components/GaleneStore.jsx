@@ -889,7 +889,6 @@ export default function GaleneStore() {
                 </div>
               </div>
 <main>
-              {/* --- INÍCIO DA SUBSTITUIÇÃO --- */}
             {/* Titulo categoria */}
             {cat !== "destaques" && (
               <div style={{ marginBottom: 22, paddingBottom: 16, borderBottom: `1px solid ${T.border}` }}>
@@ -930,7 +929,7 @@ export default function GaleneStore() {
               </div>
             )}
           </main>
-          {/* --- FIM DA SUBSTITUIÇÃO --- */}
+          
           </main>
         </div>
       )}

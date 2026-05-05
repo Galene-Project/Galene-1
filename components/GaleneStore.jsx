@@ -10,6 +10,19 @@ const GaleneStore = () => {
 };
 
 export default GaleneStore;
+useEffect(() => {
+  const fetchProdutos = async () => {
+    setCarregando(true);
+    const { data, error } = await supabase.from('produtos').select('*');
+    if (error) {
+      setErro(error.message);
+    } else {
+      setProdutos(data);
+    }
+    setCarregando(false);
+  };
+  fetchProdutos();
+}, []);
 
 // --- THEME --------------------------------------------------------------------
 const T = {

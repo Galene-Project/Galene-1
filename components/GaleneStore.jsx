@@ -888,48 +888,45 @@ export default function GaleneStore() {
                   </div>
                 </div>
               </div>
-                      import React from 'react';
+<main>
+  <h2 className="titulo-categoria" style={{borderBottom: `1px solid ${T.border}`}}>
+    Vitrine da GaleneStore
+  </h2>
 
-const GaleneStore = ({ produtosFiltrados, carregando, T, categoria }) => {
-  return (
-    <div className="galene-store">
-      {/* Titulo categoria */}
-      <div style={{ borderBottom: `1px solid ${T.border}` }}>
-        <h2>{categoria}</h2>
-        <span>{produtosFiltrados.length} produtos</span>
+  {/* Seção de Destaques */}
+  <section className="destaques">
+    {carregando ? (
+      <div className="loading">Carregando destaques...</div>
+    ) : (
+      <div className="grid grid-cols-4 gap-4">
+        {produtos.slice(0, 4).map((produto) => (
+          <div key={produto.id} className="produto-destaque">
+            <img src={produto.imagem} alt={produto.nome} />
+            <h3>{produto.nome}</h3>
+            <p>R$ {produto.preco}</p>
+          </div>
+        ))}
       </div>
+    )}
+  </section>
 
-      {/* Grid destaques */}
-      {carregando ? (
-        <div>Carregando destaques...</div>
-      ) : (
-        <div className="grid-destaques">
-          {produtosFiltrados.slice(0, 4).map((produto) => (
-            <div key={produto.id} className="produto-destaque">
-              {produto.nome}
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* Grid normal */}
-      {carregando ? (
-        <div>Carregando produtos...</div>
-      ) : (
-        <div className="grid-normal">
-          {produtosFiltrados.slice(4).map((produto) => (
-            <div key={produto.id} className="produto-normal">
-              {produto.nome}
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-};
-
-export default GaleneStore;
-
+  {/* Catálogo Normal */}
+  <section className="catalogo">
+    {carregando ? (
+      <div className="loading">Carregando catálogo...</div>
+    ) : (
+      <div className="grid grid-cols-4 gap-4">
+        {produtosFiltrados.map((produto) => (
+          <div key={produto.id} className="produto-card">
+            <img src={produto.imagem} alt={produto.nome} />
+            <h3>{produto.nome}</h3>
+            <p>R$ {produto.preco}</p>
+          </div>
+        ))}
+      </div>
+    )}
+  </section>
+</main>
           </main>
         </div>
       )}

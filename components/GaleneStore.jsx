@@ -889,44 +889,48 @@ export default function GaleneStore() {
                 </div>
               </div>
 <main>
-  <h2 className="titulo-categoria" style={{borderBottom: `1px solid ${T.border}`}}>
-    Vitrine da GaleneStore
-  </h2>
+              {/* --- INÍCIO DA SUBSTITUIÇÃO --- */}
+            {/* Titulo categoria */}
+            {cat !== "destaques" && (
+              <div style={{ marginBottom: 22, paddingBottom: 16, borderBottom: `1px solid ${T.border}` }}>
+                <div style={{ display: "flex", alignItems: "baseline", gap: 14 }}>
+                  <h2 style={{ margin: 0, fontFamily: "'Cormorant Garamond',serif", fontSize: mob ? 26 : 32, color: T.ink, fontWeight: 600 }}>
+                    {cat}
+                  </h2>
+                  <span style={{ fontFamily: "'Lato',sans-serif", fontSize: 11, color: T.ink4 }}>
+                    {produtosFiltrados.length} produtos
+                  </span>
+                </div>
+              </div>
+            )}
 
-  {/* Seção de Destaques */}
-  <section className="destaques">
-    {carregando ? (
-      <div className="loading">Carregando destaques...</div>
-    ) : (
-      <div className="grid grid-cols-4 gap-4">
-        {produtos.slice(0, 4).map((produto) => (
-          <div key={produto.id} className="produto-destaque">
-            <img src={produto.imagem} alt={produto.nome} />
-            <h3>{produto.nome}</h3>
-            <p>R$ {produto.preco}</p>
-          </div>
-        ))}
-      </div>
-    )}
-  </section>
+            {/* Grid destaques */}
+            {cat === "destaques" && (
+              <div className="fade" style={{ display: "grid", gridTemplateColumns: mob ? "1fr 1fr" : "repeat(auto-fill, minmax(260px, 1fr))", gap: mob ? 16 : 24 }}>
+                {carregando ? (
+                  <div style={{ color: T.gold, padding: '20px', textAlign: 'center', width: '100%' }}>Buscando destaques...</div>
+                ) : (
+                  produtos.filter(p => p.destaque && (cat === 'all' || p.cat === cat)).map(p => (
+                    <CardDest key={p.id} p={p} onOpen={() => { setSel(p); setView('modal'); }} />
+                  ))
+                )}
+              </div>
+            )}
 
-  {/* Catálogo Normal */}
-  <section className="catalogo">
-    {carregando ? (
-      <div className="loading">Carregando catálogo...</div>
-    ) : (
-      <div className="grid grid-cols-4 gap-4">
-        {produtosFiltrados.map((produto) => (
-          <div key={produto.id} className="produto-card">
-            <img src={produto.imagem} alt={produto.nome} />
-            <h3>{produto.nome}</h3>
-            <p>R$ {produto.preco}</p>
-          </div>
-        ))}
-      </div>
-    )}
-  </section>
-</main>
+            {/* Grid normal */}
+            {cat !== "destaques" && (
+              <div className="fade" style={{ display: "grid", gridTemplateColumns: mob ? "1fr 1fr" : "repeat(auto-fill, minmax(200px, 1fr))", gap: mob ? 12 : 16 }}>
+                {carregando ? (
+                  <div style={{ color: T.gold, padding: '40px', textAlign: 'center', width: '100%' }}>Carregando catálogo completo...</div>
+                ) : (
+                  produtosFiltrados.filter(p => !p.destaque).map(p => (
+                    <Card key={p.id} p={p} onOpen={() => { setSel(p); setView('modal'); }} />
+                  ))
+                )}
+              </div>
+            )}
+          </main>
+          {/* --- FIM DA SUBSTITUIÇÃO --- */}
           </main>
         </div>
       )}

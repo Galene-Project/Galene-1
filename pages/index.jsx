@@ -1,709 +1,768 @@
-import { useState, useEffect } from 'react';
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import React, { useState, useEffect, useMemo } from 'react';
+import { createClient } from '@supabase/supabase-js';
 
-const RingSVG = ({ className = 'w-24 h-24', color = '#d4af37' }) => (
-  <svg className={className} viewBox="0 0 120 120" style={{ color }} fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-    <ellipse cx="60" cy="60" rx="45" ry="15" />
-    <ellipse cx="60" cy="60" rx="30" ry="10" transform="rotate(90 60 60)" />
-    <polygon points="55,45 60,40 65,45 62,52 58,52" />
-  </svg>
-);
+const supabaseUrl = 'https://kylqszyuwnzzuhaegdhj.supabase.co';
+const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt5bHFzenl1d256enVoYWVnZGhqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc5MDI0ODYsImV4cCI6MjA5MzQ3ODQ4Nn0.jFXnRx_fvJvaasqLx7oEx8DsE2tL9b8zMzkkKPCWbVk';
 
-const NecklaceSVG = ({ className = 'w-24 h-24', color = '#d4af37' }) => (
-  <svg className={className} viewBox="0 0 120 120" style={{ color }} fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M20 60 Q60 20 100 60" />
-    <path d="M20 60 Q30 70 20 80 Q30 90 20 100" strokeWidth="2" />
-    <path d="M100 60 Q90 70 100 80 Q90 90 100 100" strokeWidth="2" />
-    <circle cx="60" cy="65" r="8" fill="currentColor" />
-  </svg>
-);
+const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-const EarringsSVG = ({ className = 'w-24 h-24', color = '#d4af37' }) => (
-  <svg className={className} viewBox="0 0 120 120" style={{ color }} fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M40 30 Q50 50 40 70 Q50 80 40 90" />
-    <path d="M80 30 Q70 50 80 70 Q70 80 80 90" />
-  </svg>
-);
-
-const BraceletSVG = ({ className = 'w-24 h-24', color = '#d4af37' }) => (
-  <svg className={className} viewBox="0 0 120 120" style={{ color }} fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
-    <circle cx="60" cy="60" r="40" />
-    <path d="M20 60 L100 60" strokeDasharray="5,5" />
-  </svg>
-);
-
-export default function GaleneStore() {
-  'use client';
-
-  const supabase = createClientComponentClient();
-
-  const T = {
-    bg: '#f8f9fa',
-    ink: '#212529',
-    gold: '#d4af37',
-    accent: '#ffffff',
-  };
-
-  const productSVGs = {
-    1: RingSVG,
-    2: NecklaceSVG,
-    3: EarringsSVG,
-    4: BraceletSVG,
-  };
-
-  const fallbackProducts = [
-    {
-      id: 1,
-      name: 'Anel Clássico',
-      price: 299.90,
-      description: 'Elegante anel de ouro 18k com design atemporal.',
-      svg: RingSVG,
-    },
-    {
-      id: 2,
-      name: 'Colar Delicado',
-      price: 499.90,
-      description: 'Colar fino com pingente de diamante brilhante.',
-      svg: NecklaceSVG,
-    },
-    {
-      id: 3,
-      name: 'Brincos de Argola',
-      price: 399.90,
-      description: 'Argolas douradas modernas e versáteis.',
-      svg: EarringsSVG,
-    },
-    {
-      id: 4,
-      name: 'Pulseira Tennis',
-      price: 599.90,
-      description: 'Pulseira com diamantes em linha tennis clássica.',
-      svg: BraceletSVG,
-    },
-  ];
-
+export default function Home() {
   const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [cart, setCart] = useState([]);
-  const [showProductModal, setShowProductModal] = useState(false);
+  const [showModal, setShowModal] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
-  const [selectedSize, setSelectedSize] = useState('M');
-  const [selectedQty, setSelectedQty] = useState(1);
-  const [showCartModal, setShowCartModal] = useState(false);
-  const [showCheckout, setShowCheckout] = useState(false);
+  const [showCartDrawer, setShowCartDrawer] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+  const [filters, setFilters] = useState({ category: '' });
   const [checkoutStep, setCheckoutStep] = useState(0);
-  const [shippingInfo, setShippingInfo] = useState({
-    fullName: '',
-    address: '',
-    city: '',
-    state: '',
-    zipCode: '',
-    phone: '',
-  });
-  const [paymentInfo, setPaymentInfo] = useState({
-    cardNumber: '',
-    expiry: '',
-    cvv: '',
-    cardHolder: '',
-  });
+  const [shippingInfo, setShippingInfo] = useState({ nome: '', email: '', endereco: '', cidade: '', cep: '', telefone: '' });
+  const [paymentInfo, setPaymentInfo] = useState({ cartao: '', validade: '', cvv: '' });
 
-  useEffect(() => {
-    async function loadProducts() {
-      try {
-        const { data, error } = await supabase
-          .from('products')
-          .select('id, name, price, description')
-          .order('id', { ascending: true });
-
-        if (error || !data?.length) {
-          console.warn('Using fallback products:', error?.message);
-          setProducts(fallbackProducts);
-        } else {
-          const enriched = data.map((p) => ({
-            ...p,
-            price: parseFloat(p.price),
-            svg: productSVGs[p.id] || RingSVG,
-          }));
-          setProducts(enriched);
-        }
-      } catch (err) {
-        console.warn('Supabase error, using fallback:', err);
-        setProducts(fallbackProducts);
-      }
-    }
-    loadProducts();
-  }, []);
-
-  const getTotal = () => {
-    return cart.reduce((sum, item) => sum + item.price * item.qty, 0);
+  const theme = {
+    primary: '#4F46E5',
+    secondary: '#10B981',
+    danger: '#EF4444',
+    light: '#F9FAFB',
+    dark: '#1F2937',
+    gray: '#6B7280',
   };
 
-  const addToCart = (product, options = {}, qty = 1) => {
-    setCart((prev) => {
-      const existingIdx = prev.findIndex(
-        (p) => p.id === product.id && p.options?.size === options?.size
-      );
-      if (existingIdx > -1) {
-        const newCart = [...prev];
-        newCart[existingIdx] = {
-          ...newCart[existingIdx],
-          qty: newCart[existingIdx].qty + qty,
-        };
-        return newCart;
-      }
-      return [...prev, { ...product, options, qty }];
-    });
-  };
+  const cartCount = useMemo(() => cart.reduce((sum, item) => sum + item.quantity, 0), [cart]);
 
-  const updateCartQty = (id, options, newQty) => {
-    setCart((prev) => {
-      const idx = prev.findIndex(
-        (p) => p.id === id && p.options?.size === options?.size
-      );
-      if (idx === -1) return prev;
-      const newCart = [...prev];
-      if (newQty <= 0) {
-        newCart.splice(idx, 1);
-      } else {
-        newCart[idx] = { ...newCart[idx], qty: newQty };
-      }
-      return newCart;
-    });
-  };
-
-  const CartList = ({ showControls = true, onUpdateQty }) => (
-    <>
-      {cart.length === 0 ? (
-        <p
-          className="text-center py-8 text-gray-500"
-          style={{ color: T.ink + '80' }}
-        >
-          Seu carrinho está vazio.
-        </p>
-      ) : (
-        <>
-          {cart.map((item) => {
-            const key = `${item.id}-${item.options?.size || 'default'}`;
-            return (
-              <div
-                key={key}
-                className="flex items-center gap-4 p-4 mb-4 rounded-lg border"
-                style={{
-                  borderColor: T.gold,
-                  backgroundColor: T.accent,
-                }}
-              >
-                <item.svg className="w-16 h-16 flex-shrink-0" style={{ color: T.gold }} />
-                <div className="flex-1 min-w-0">
-                  <h4
-                    className="font-semibold truncate"
-                    style={{ color: T.ink }}
-                  >
-                    {item.name}
-                  </h4>
-                  {item.options?.size && (
-                    <p
-                      className="text-sm opacity-75"
-                      style={{ color: T.ink }}
-                    >
-                      Tamanho: {item.options.size}
-                    </p>
-                  )}
-                  <p
-                    className="text-sm opacity-75"
-                    style={{ color: T.ink }}
-                  >
-                    R$ {(item.price * item.qty).toFixed(2)}
-                  </p>
-                </div>
-                {showControls && onUpdateQty && (
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() =>
-                        onUpdateQty(item.id, item.options, item.qty - 1)
-                      }
-                      className="w-10 h-10 rounded-full bg-gray-200 hover:bg-gray-300 flex items-center justify-center text-sm font-bold"
-                    >
-                      −
-                    </button>
-                    <span className="w-10 text-center font-mono font-bold">
-                      {item.qty}
-                    </span>
-                    <button
-                      onClick={() =>
-                        onUpdateQty(item.id, item.options, item.qty + 1)
-                      }
-                      className="w-10 h-10 rounded-full bg-gray-200 hover:bg-gray-300 flex items-center justify-center text-sm font-bold"
-                    >
-                      +
-                    </button>
-                  </div>
-                )}
-              </div>
-            );
-          })}
-          <div
-            className="text-2xl font-bold mt-6 text-right"
-            style={{ color: T.ink }}
-          >
-            Total: R$ {getTotal().toFixed(2)}
-          </div>
-        </>
-      )}
-    </>
+  const getTotal = useMemo(() => 
+    cart.reduce((sum, item) => sum + (item.preco * item.quantity), 0), 
+    [cart]
   );
 
-  const nextCheckoutStep = async () => {
-    if (checkoutStep < 2) {
-      setCheckoutStep((c) => c + 1);
-    } else {
-      try {
-        const order = {
-          items: cart.map((item) => ({
-            ...item,
-            subtotal: item.price * item.qty,
-          })),
-          total: getTotal(),
-          shipping: shippingInfo,
-          payment: paymentInfo,
-        };
-        const { error } = await supabase.from('orders').insert([order]);
-        if (error) throw error;
-        alert('Pedido realizado com sucesso!');
-      } catch (error) {
-        console.error('Erro no Supabase:', error);
-        alert('Pedido simulado com sucesso! (Supabase opcional)');
-      }
-      setCart([]);
-      setShowCheckout(false);
-      setCheckoutStep(0);
+  const categories = useMemo(() => {
+    return [...new Set(products.map(p => p.categoria).filter(Boolean))];
+  }, [products]);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  const fetchProducts = async () => {
+    setLoading(true);
+    let query = supabase.from('produtos').select('*');
+    if (filters.category) {
+      query = query.eq('categoria', filters.category);
     }
+    query = query.order('destaque', { ascending: false }).order('criado_em', { ascending: false });
+    const { data, error } = await query;
+    if (error) {
+      console.error('Erro ao buscar produtos:', error);
+    } else {
+      setProducts(data || []);
+    }
+    setLoading(false);
   };
 
-  const prevCheckoutStep = () => {
-    setCheckoutStep((c) => Math.max(0, c - 1));
+  useEffect(() => {
+    fetchProducts();
+  }, [filters.category]);
+
+  const addToCart = (product) => {
+    setCart((prev) => {
+      const existing = prev.find((p) => p.id === product.id);
+      if (existing) {
+        return prev.map((p) =>
+          p.id === product.id ? { ...p, quantity: p.quantity + 1 } : p
+        );
+      }
+      return [...prev, { ...product, quantity: 1 }];
+    });
+  };
+
+  const updateQuantity = (productId, quantity) => {
+    if (quantity <= 0) {
+      setCart((prev) => prev.filter((p) => p.id !== productId));
+      return;
+    }
+    setCart((prev) =>
+      prev.map((p) => (p.id === productId ? { ...p, quantity } : p))
+    );
+  };
+
+  const removeFromCart = (productId) => {
+    setCart((prev) => prev.filter((p) => p.id !== productId));
+  };
+
+  const openModal = (product) => {
+    setSelectedProduct(product);
+    setShowModal(true);
+  };
+
+  const applyFilter = (cat) => {
+    setFilters({ category: cat });
+  };
+
+  const startCheckout = () => {
+    if (cart.length === 0) return;
+    setCheckoutStep(1);
+  };
+
+  const nextStep = () => {
+    setCheckoutStep((prev) => prev + 1);
+  };
+
+  const prevStep = () => {
+    setCheckoutStep((prev) => prev - 1);
+  };
+
+  const completeCheckout = () => {
+    alert('Compra realizada com sucesso!');
+    setCart([]);
+    setCheckoutStep(0);
+    setShippingInfo({ nome: '', email: '', endereco: '', cidade: '', cep: '', telefone: '' });
+    setPaymentInfo({ cartao: '', validade: '', cvv: '' });
+  };
+
+  const headerStyle = {
+    position: 'fixed',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: '60px',
+    backgroundColor: 'white',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: '0 20px',
+    boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+    zIndex: 1000,
+    fontFamily: 'Arial, sans-serif',
+  };
+
+  const logoStyle = {
+    margin: 0,
+    color: theme.dark,
+    fontSize: '1.5em',
+  };
+
+  const cartButtonStyle = {
+    position: 'relative',
+    background: 'none',
+    border: 'none',
+    fontSize: '1.8em',
+    cursor: 'pointer',
+    padding: '10px',
+  };
+
+  const badgeStyle = {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    backgroundColor: theme.danger,
+    color: 'white',
+    borderRadius: '50%',
+    width: '20px',
+    height: '20px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    fontSize: '0.8em',
+    fontWeight: 'bold',
+  };
+
+  const sidebarStyle = {
+    position: 'fixed',
+    top: '60px',
+    left: 0,
+    width: isMobile ? '80vw' : '250px',
+    height: 'calc(100vh - 60px)',
+    backgroundColor: theme.light,
+    padding: '20px',
+    overflowY: 'auto',
+    zIndex: 999,
+    transform: isMobile && !showFilters ? 'translateX(-100%)' : 'translateX(0)',
+    transition: 'transform 0.3s ease',
+    borderRight: `1px solid ${theme.gray}`,
+    fontFamily: 'Arial, sans-serif',
+  };
+
+  const mainStyle = {
+    marginLeft: isMobile ? 0 : '270px',
+    marginTop: '60px',
+    padding: '20px',
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+    gap: '20px',
+    minHeight: 'calc(100vh - 60px)',
+    width: 'calc(100vw - 40px)',
+    boxSizing: 'border-box',
+    fontFamily: 'Arial, sans-serif',
+  };
+
+  const getFilterBtnStyle = (active) => ({
+    display: 'block',
+    width: '100%',
+    padding: '12px',
+    marginBottom: '10px',
+    backgroundColor: active ? theme.primary : 'transparent',
+    color: active ? 'white' : theme.dark,
+    border: `1px solid ${active ? 'transparent' : theme.gray}`,
+    borderRadius: '6px',
+    cursor: 'pointer',
+    fontSize: '1em',
+  });
+
+  const closeBtnStyle = {
+    width: '100%',
+    padding: '12px',
+    backgroundColor: theme.gray,
+    color: 'white',
+    border: 'none',
+    borderRadius: '6px',
+    cursor: 'pointer',
+    marginTop: '20px',
+  };
+
+  const cartDrawerStyle = {
+    position: 'fixed',
+    top: '60px',
+    right: showCartDrawer ? '0' : (isMobile ? '-100vw' : '-400px'),
+    width: isMobile ? '100vw' : '400px',
+    height: 'calc(100vh - 60px)',
+    backgroundColor: 'white',
+    boxShadow: isMobile ? '0 0 20px rgba(0,0,0,0.3)' : '-4px 0 12px rgba(0,0,0,0.15)',
+    zIndex: 1001,
+    transition: 'right 0.3s ease',
+    overflowY: 'auto',
+    fontFamily: 'Arial, sans-serif',
+  };
+
+  const cardStyle = {
+    border: '1px solid #ddd',
+    borderRadius: '8px',
+    overflow: 'hidden',
+    backgroundColor: 'white',
+    boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+  };
+
+  const imageStyle = {
+    width: '100%',
+    height: '200px',
+    objectFit: 'cover',
+  };
+
+  const destaqueBadge = {
+    position: 'absolute',
+    top: '10px',
+    left: '10px',
+    backgroundColor: '#FCD34D',
+    color: theme.dark,
+    padding: '4px 8px',
+    borderRadius: '12px',
+    fontSize: '0.8em',
+    fontWeight: 'bold',
+  };
+
+  const imageContainer = {
+    position: 'relative',
+    height: '200px',
+  };
+
+  const cardContentStyle = {
+    padding: '16px',
+  };
+
+  const titleStyle = {
+    margin: '0 0 8px 0',
+    fontSize: '1.2em',
+    color: theme.dark,
+  };
+
+  const textStyle = {
+    margin: '0 0 12px 0',
+    color: theme.gray,
+    fontSize: '0.9em',
+  };
+
+  const priceStyle = {
+    fontSize: '1.4em',
+    fontWeight: 'bold',
+    color: theme.primary,
+  };
+
+  const oldPriceStyle = {
+    fontSize: '1.1em',
+    color: theme.gray,
+    textDecoration: 'line-through',
+  };
+
+  const primaryBtnStyle = {
+    flex: 1,
+    padding: '10px',
+    backgroundColor: theme.primary,
+    color: 'white',
+    border: 'none',
+    borderRadius: '6px',
+    cursor: 'pointer',
+    fontWeight: '500',
+  };
+
+  const secondaryBtnStyle = {
+    flex: 1,
+    padding: '10px',
+    backgroundColor: 'transparent',
+    color: theme.primary,
+    border: `1px solid ${theme.primary}`,
+    borderRadius: '6px',
+    cursor: 'pointer',
+    fontWeight: '500',
+  };
+
+  const ProductCard = ({ product, onOpenModal, onAddToCart }) => {
+    const oldPrice = product.preco_antigo;
+    return (
+      <div style={cardStyle}>
+        <div style={imageContainer}>
+          <img src={product.foto_url} alt={product.nome} style={imageStyle} />
+          {product.destaque && <div style={destaqueBadge}>Destaque</div>}
+        </div>
+        <div style={cardContentStyle}>
+          <h3 style={titleStyle}>{product.nome}</h3>
+          <p style={textStyle}>{product.categoria} - {product.material}</p>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: '10px', marginBottom: '10px' }}>
+            <span style={priceStyle}>
+              {product.preco.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+            </span>
+            {oldPrice && (
+              <span style={oldPriceStyle}>
+                {oldPrice.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+              </span>
+            )}
+          </div>
+          <div style={{ display: 'flex', gap: '10px' }}>
+            <button onClick={() => onOpenModal(product)} style={secondaryBtnStyle}>
+              Ver Detalhes
+            </button>
+            <button onClick={() => onAddToCart(product)} style={primaryBtnStyle}>
+              Adicionar
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const cartItemStyle = {
+    display: 'flex',
+    gap: '12px',
+    padding: '16px 0',
+    borderBottom: '1px solid #eee',
+    alignItems: 'center',
+  };
+
+  const smallImageStyle = {
+    width: '60px',
+    height: '60px',
+    objectFit: 'cover',
+    borderRadius: '4px',
+  };
+
+  const removeBtnStyle = {
+    backgroundColor: theme.danger,
+    color: 'white',
+    border: 'none',
+    padding: '8px 12px',
+    borderRadius: '4px',
+    cursor: 'pointer',
+    fontSize: '0.9em',
+  };
+
+  const CartItem = ({ item, onUpdateQuantity, onRemove }) => (
+    <div style={cartItemStyle}>
+      <img src={item.foto_url} alt={item.nome} style={smallImageStyle} />
+      <div style={{ flex: 1 }}>
+        <h4 style={{ margin: '0 0 4px 0', fontSize: '1em' }}>{item.nome}</h4>
+        <p style={{ margin: 0, color: theme.gray }}>
+          {item.preco.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+        </p>
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', minWidth: '80px' }}>
+        <button
+          onClick={() => onUpdateQuantity(item.id, item.quantity + 1)}
+          style={{ background: theme.primary, color: 'white', border: 'none', width: '30px', height: '30px', borderRadius: '50%', cursor: 'pointer' }}
+        >
+          +
+        </button>
+        <span style={{ fontWeight: 'bold' }}>{item.quantity}</span>
+        <button
+          onClick={() => onUpdateQuantity(item.id, item.quantity - 1)}
+          style={{ background: theme.gray, color: 'white', border: 'none', width: '30px', height: '30px', borderRadius: '50%', cursor: 'pointer' }}
+        >
+          -
+        </button>
+      </div>
+      <button onClick={() => onRemove(item.id)} style={removeBtnStyle}>
+        Remover
+      </button>
+    </div>
+  );
+
+  const buyBtnStyle = {
+    width: '100%',
+    padding: '14px',
+    backgroundColor: theme.primary,
+    color: 'white',
+    border: 'none',
+    borderRadius: '6px',
+    fontSize: '1.1em',
+    fontWeight: '500',
+    cursor: 'pointer',
+    marginTop: '10px',
+  };
+
+  const modalOverlayStyle = {
+    position: 'fixed',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 1000,
+  };
+
+  const modalContentStyle = {
+    backgroundColor: 'white',
+    width: '90vw',
+    maxWidth: '500px',
+    maxHeight: '90vh',
+    borderRadius: '12px',
+    overflow: 'hidden',
+    position: 'relative',
+  };
+
+  const modalImageStyle = {
+    width: '100%',
+    height: '300px',
+    objectFit: 'cover',
+  };
+
+  const closeModalStyle = {
+    position: 'absolute',
+    top: '10px',
+    right: '15px',
+    background: 'none',
+    border: 'none',
+    fontSize: '2em',
+    cursor: 'pointer',
+    color: theme.gray,
+  };
+
+  const ProductModal = ({ product, onClose, onAddToCart }) => (
+    <div style={modalOverlayStyle} onClick={onClose}>
+      <div style={modalContentStyle} onClick={(e) => e.stopPropagation()}>
+        <button style={closeModalStyle} onClick={onClose}>×</button>
+        <img src={product.foto_url} alt={product.nome} style={modalImageStyle} />
+        <div style={{ padding: '24px' }}>
+          <h2 style={{ ...titleStyle, fontSize: '1.8em', marginBottom: '12px' }}>{product.nome}</h2>
+          <p style={{ ...textStyle, fontSize: '1.1em', marginBottom: '20px' }}>
+            {product.categoria} - {product.material}
+          </p>
+          <div style={{ ...priceStyle, fontSize: '2em', marginBottom: '20px' }}>
+            {product.preco.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+          </div>
+          <button 
+            onClick={() => {
+              onAddToCart(product);
+              onClose();
+            }} 
+            style={{ ...primaryBtnStyle, width: '100%', padding: '16px', fontSize: '1.2em' }}
+          >
+            Adicionar ao Carrinho
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+
+  const checkoutOverlayStyle = {
+    position: 'fixed',
+    top: 0,
+    left: 0,
+    width: '100vw',
+    height: '100vh',
+    backgroundColor: 'white',
+    zIndex: 1002,
+    overflowY: 'auto',
+    fontFamily: 'Arial, sans-serif',
+  };
+
+  const checkoutHeaderStyle = {
+    position: 'sticky',
+    top: 0,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: '20px',
+    backgroundColor: 'white',
+    borderBottom: '1px solid #eee',
+    zIndex: 10,
+  };
+
+  const stepLabelStyle = {
+    fontSize: '1.2em',
+    fontWeight: 'bold',
+    color: theme.dark,
+  };
+
+  const formInputStyle = {
+    width: '100%',
+    padding: '12px',
+    marginBottom: '16px',
+    border: '1px solid #ddd',
+    borderRadius: '6px',
+    fontSize: '1em',
+    boxSizing: 'border-box',
+  };
+
+  const checkoutBtnStyle = (primary = true) => ({
+    width: '48%',
+    padding: '14px',
+    border: 'none',
+    borderRadius: '6px',
+    fontSize: '1em',
+    fontWeight: '500',
+    cursor: 'pointer',
+    marginBottom: '20px',
+    backgroundColor: primary ? theme.primary : theme.gray,
+    color: 'white',
+  });
+
+  const CheckoutSteps = () => (
+    <div style={checkoutOverlayStyle}>
+      <div style={checkoutHeaderStyle}>
+        <button onClick={() => setCheckoutStep(0)} style={{ background: 'none', border: 'none', fontSize: '1.5em', cursor: 'pointer' }}>
+          ←
+        </button>
+        <div style={stepLabelStyle}>Passo {checkoutStep} de 3</div>
+        <div />
+      </div>
+      <div style={{ maxWidth: '600px', margin: '0 auto', padding: '20px' }}>
+        {checkoutStep === 1 && (
+          <>
+            <h2 style={{ color: theme.dark, marginBottom: '20px' }}>Revisão do Carrinho</h2>
+            {cart.map((item) => (
+              <CartItem key={item.id} item={item} onUpdateQuantity={updateQuantity} onRemove={removeFromCart} />
+            ))}
+            <div style={{ fontSize: '1.5em', fontWeight: 'bold', textAlign: 'right', margin: '20px 0', color: theme.primary }}>
+              Total: {getTotal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+            </div>
+            <button onClick={nextStep} style={buyBtnStyle}>Próximo: Entrega</button>
+          </>
+        )}
+        {checkoutStep === 2 && (
+          <>
+            <h2 style={{ color: theme.dark, marginBottom: '20px' }}>Informações de Entrega</h2>
+            <input
+              placeholder="Nome Completo"
+              value={shippingInfo.nome}
+              onChange={(e) => setShippingInfo({ ...shippingInfo, nome: e.target.value })}
+              style={formInputStyle}
+            />
+            <input
+              placeholder="Email"
+              value={shippingInfo.email}
+              onChange={(e) => setShippingInfo({ ...shippingInfo, email: e.target.value })}
+              style={formInputStyle}
+            />
+            <input
+              placeholder="Endereço"
+              value={shippingInfo.endereco}
+              onChange={(e) => setShippingInfo({ ...shippingInfo, endereco: e.target.value })}
+              style={formInputStyle}
+            />
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <input
+                placeholder="Cidade"
+                value={shippingInfo.cidade}
+                onChange={(e) => setShippingInfo({ ...shippingInfo, cidade: e.target.value })}
+                style={{ ...formInputStyle, flex: 1 }}
+              />
+              <input
+                placeholder="CEP"
+                value={shippingInfo.cep}
+                onChange={(e) => setShippingInfo({ ...shippingInfo, cep: e.target.value })}
+                style={{ ...formInputStyle, flex: 1 }}
+              />
+            </div>
+            <input
+              placeholder="Telefone"
+              value={shippingInfo.telefone}
+              onChange={(e) => setShippingInfo({ ...shippingInfo, telefone: e.target.value })}
+              style={formInputStyle}
+            />
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <button onClick={prevStep} style={checkoutBtnStyle(false)}>Voltar</button>
+              <button onClick={nextStep} style={checkoutBtnStyle(true)}>Próximo: Pagamento</button>
+            </div>
+          </>
+        )}
+        {checkoutStep === 3 && (
+          <>
+            <h2 style={{ color: theme.dark, marginBottom: '20px' }}>Pagamento</h2>
+            <input
+              placeholder="Número do Cartão"
+              value={paymentInfo.cartao}
+              onChange={(e) => setPaymentInfo({ ...paymentInfo, cartao: e.target.value })}
+              style={formInputStyle}
+            />
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <input
+                placeholder="Validade (MM/AA)"
+                value={paymentInfo.validade}
+                onChange={(e) => setPaymentInfo({ ...paymentInfo, validade: e.target.value })}
+                style={{ ...formInputStyle, flex: 1 }}
+              />
+              <input
+                placeholder="CVV"
+                value={paymentInfo.cvv}
+                onChange={(e) => setPaymentInfo({ ...paymentInfo, cvv: e.target.value })}
+                style={{ ...formInputStyle, flex: 1 }}
+              />
+            </div>
+            <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
+              <button onClick={prevStep} style={checkoutBtnStyle(false)}>Voltar</button>
+              <button onClick={completeCheckout} style={checkoutBtnStyle(true)}>Concluir Compra</button>
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  );
+
+  const backdropStyle = {
+    position: 'fixed',
+    top: '60px',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    zIndex: 998,
   };
 
   return (
-    <div
-      className="min-h-screen p-4 sm:p-6 lg:p-8"
-      style={{ backgroundColor: T.bg, color: T.ink }}
-    >
-      <header
-        className="text-3xl md:text-4xl font-bold mb-12 text-center"
-        style={{ color: T.ink }}
-      >
-        Galene Store
+    <>
+      <header style={headerStyle}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+          <h1 style={logoStyle}>Loja Supabase</h1>
+          {isMobile && (
+            <button
+              onClick={() => setShowFilters(!showFilters)}
+              style={{ background: 'none', border: 'none', fontSize: '1.5em', cursor: 'pointer', color: theme.dark }}
+            >
+              ☰
+            </button>
+          )}
+        </div>
+        <button onClick={() => setShowCartDrawer(true)} style={cartButtonStyle}>
+          🛒
+          {cartCount > 0 && <span style={badgeStyle}>{cartCount}</span>}
+        </button>
       </header>
 
-      <div className="flex flex-col lg:flex-row gap-6 max-w-7xl mx-auto">
-        <main className="flex-1">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {products.map((product) => (
-              <div
-                key={product.id}
-                className="group cursor-pointer p-6 rounded-xl border hover:shadow-2xl transition-all hover:-translate-y-2 hover:scale-[1.02]"
-                style={{
-                  backgroundColor: T.accent,
-                  borderColor: T.gold,
-                }}
-                onClick={() => {
-                  setSelectedProduct(product);
-                  setSelectedSize('M');
-                  setSelectedQty(1);
-                  setShowProductModal(true);
-                }}
-              >
-                <div className="w-32 h-32 mx-auto mb-6 flex items-center justify-center p-4">
-                  <product.svg style={{ color: T.gold }} />
-                </div>
-                <h3
-                  className="font-bold text-xl mb-3 text-center leading-tight"
-                  style={{ color: T.ink }}
-                >
-                  {product.name}
-                </h3>
-                <p
-                  className="text-2xl font-bold text-center mb-6"
-                  style={{ color: T.gold }}
-                >
-                  R$ {product.price.toFixed(2)}
-                </p>
-              </div>
-            ))}
-          </div>
-        </main>
-
-        <aside className="lg:w-80 w-full lg:sticky lg:top-24 self-start lg:block hidden h-fit">
-          <div
-            className="p-6 rounded-2xl shadow-xl"
-            style={{ backgroundColor: T.accent }}
+      <aside style={sidebarStyle}>
+        <h3 style={{ marginBottom: '20px', color: theme.dark }}>Filtros</h3>
+        <div>
+          <button
+            onClick={() => applyFilter('')}
+            style={getFilterBtnStyle(filters.category === '')}
           >
-            <h2
-              className="text-2xl font-bold mb-6 flex items-center gap-2"
-              style={{ color: T.ink }}
-            >
-              Carrinho ({cart.length})
-            </h2>
-            <CartList showControls={true} onUpdateQty={updateCartQty} />
-            {cart.length > 0 && (
-              <button
-                className="w-full mt-6 bg-blue-500 hover:bg-blue-600 text-white py-4 rounded-xl text-lg font-semibold transition-all"
-                onClick={() => setShowCheckout(true)}
-              >
-                Ir para Checkout
-              </button>
-            )}
-          </div>
-        </aside>
-      </div>
-
-      {/* Mobile Cart Button */}
-      {cart.length > 0 && (
-        <button
-          className="fixed bottom-6 right-6 lg:hidden w-20 h-20 rounded-full shadow-2xl flex items-center justify-center text-2xl font-bold shadow-lg backdrop-blur-sm z-30"
-          style={{ backgroundColor: T.gold, color: T.bg }}
-          onClick={() => setShowCartModal(true)}
-        >
-          🛒<span className="text-xs ml-1">{cart.length}</span>
-        </button>
-      )}
-
-      {/* Product Selection Modal */}
-      {showProductModal && selectedProduct && (
-        <div
-          className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
-          onClick={() => setShowProductModal(false)}
-        >
-          <div
-            className="max-w-md w-full max-h-[90vh] overflow-y-auto rounded-3xl p-8 shadow-2xl"
-            style={{ backgroundColor: T.bg }}
-            onClick={(e) => e.stopPropagation()}
-          >
+            Todos
+          </button>
+          {categories.map((cat) => (
             <button
-              className="absolute top-6 right-6 text-2xl"
-              style={{ color: T.ink }}
-              onClick={() => setShowProductModal(false)}
+              key={cat}
+              onClick={() => applyFilter(cat)}
+              style={getFilterBtnStyle(filters.category === cat)}
             >
-              ×
+              {cat}
             </button>
-            <div className="w-48 h-48 mx-auto mb-8 flex items-center justify-center p-6">
-              <selectedProduct.svg style={{ color: T.gold }} />
-            </div>
-            <h2
-              className="text-3xl font-bold mb-4 text-center"
-              style={{ color: T.ink }}
-            >
-              {selectedProduct.name}
-            </h2>
-            <p
-              className="mb-8 text-center text-lg leading-relaxed"
-              style={{ color: T.ink }}
-            >
-              {selectedProduct.description}
-            </p>
-            <div className="mb-8">
-              <label
-                className="block mb-4 font-semibold"
-                style={{ color: T.ink }}
-              >
-                Tamanho:
-              </label>
-              <select
-                className="w-full p-4 border-2 rounded-xl text-lg"
-                style={{ borderColor: T.gold, backgroundColor: T.accent }}
-                value={selectedSize}
-                onChange={(e) => setSelectedSize(e.target.value)}
-              >
-                <option>P</option>
-                <option>M</option>
-                <option>G</option>
-              </select>
-            </div>
-            <div className="flex gap-4 mb-8">
-              <label
-                className="flex-1"
-                style={{ color: T.ink }}
-              >
-                Quantidade:
-              </label>
-              <input
-                type="number"
-                min="1"
-                className="flex-1 p-4 border-2 rounded-xl text-center text-2xl font-mono"
-                style={{ borderColor: T.gold, backgroundColor: T.accent }}
-                value={selectedQty}
-                onChange={(e) => setSelectedQty(Math.max(1, +e.target.value))}
+          ))}
+        </div>
+        {isMobile && (
+          <button onClick={() => setShowFilters(false)} style={closeBtnStyle}>
+            Fechar
+          </button>
+        )}
+      </aside>
+
+      <main style={mainStyle}>
+        {loading ? (
+          <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '40px', color: theme.gray }}>
+            Carregando produtos...
+          </div>
+        ) : products.length === 0 ? (
+          <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '40px', color: theme.gray }}>
+            Nenhum produto encontrado.
+          </div>
+        ) : (
+          products.map((product) => (
+            <ProductCard
+              key={product.id}
+              product={product}
+              onOpenModal={openModal}
+              onAddToCart={addToCart}
+            />
+          ))
+        )}
+      </main>
+
+      {showCartDrawer && <div style={cartDrawerStyle}>
+        <div style={{ padding: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #eee' }}>
+          <h2 style={{ margin: 0, color: theme.dark }}>Carrinho ({cartCount})</h2>
+          <button onClick={() => setShowCartDrawer(false)} style={{ background: 'none', border: 'none', fontSize: '1.8em', cursor: 'pointer' }}>✕</button>
+        </div>
+        <div style={{ padding: '20px' }}>
+          {cart.length === 0 ? (
+            <p style={{ textAlign: 'center', color: theme.gray, margin: '40px 0' }}>Carrinho vazio</p>
+          ) : (
+            cart.map((item) => (
+              <CartItem
+                key={item.id}
+                item={item}
+                onUpdateQuantity={updateQuantity}
+                onRemove={removeFromCart}
               />
+            ))
+          )}
+          {cart.length > 0 && (
+            <div style={{ marginTop: '20px', paddingTop: '20px', borderTop: '1px solid #eee' }}>
+              <div style={{ fontSize: '1.4em', fontWeight: 'bold', textAlign: 'right', marginBottom: '20px', color: theme.primary }}>
+                Total: {getTotal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+              </div>
+              <button onClick={startCheckout} style={buyBtnStyle} disabled={cart.length === 0}>
+                Finalizar Compra
+              </button>
             </div>
-            <button
-              className="w-full bg-green-500 hover:bg-green-600 text-white py-5 rounded-2xl text-xl font-bold transition-all shadow-lg"
-              onClick={() => {
-                addToCart(selectedProduct, { size: selectedSize }, selectedQty);
-                setShowProductModal(false);
-              }}
-            >
-              Adicionar ao Carrinho
-            </button>
-          </div>
+          )}
         </div>
+      </div>}
+
+      {showModal && selectedProduct && (
+        <ProductModal
+          product={selectedProduct}
+          onClose={() => setShowModal(false)}
+          onAddToCart={addToCart}
+        />
       )}
 
-      {/* Mobile Cart Modal */}
-      {showCartModal && (
-        <div
-          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 flex"
-          onClick={() => setShowCartModal(false)}
-        >
-          <div
-            className="bg-white w-full h-full p-6 sm:p-8 overflow-y-auto rounded-t-3xl sm:rounded-none sm:w-96"
-            style={{ backgroundColor: T.bg }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex justify-between items-center mb-8 pb-6 border-b-2" style={{ borderColor: T.gold }}>
-              <h2
-                className="text-3xl font-bold"
-                style={{ color: T.ink }}
-              >
-                Carrinho
-              </h2>
-              <button
-                className="text-3xl"
-                style={{ color: T.ink }}
-                onClick={() => setShowCartModal(false)}
-              >
-                ×
-              </button>
-            </div>
-            <CartList showControls={true} onUpdateQty={updateCartQty} />
-            {cart.length > 0 && (
-              <button
-                className="w-full mt-8 bg-blue-500 hover:bg-blue-600 text-white py-5 rounded-2xl text-xl font-bold transition-all shadow-lg"
-                onClick={() => {
-                  setShowCartModal(false);
-                  setShowCheckout(true);
-                }}
-              >
-                Checkout
-              </button>
-            )}
-          </div>
-        </div>
-      )}
+      {checkoutStep > 0 && <CheckoutSteps />}
 
-      {/* Checkout Modal */}
-      {showCheckout && (
-        <div
-          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center p-4"
-          onClick={() => setShowCheckout(false)}
-        >
-          <div
-            className="w-full max-w-4xl max-h-[95vh] overflow-hidden rounded-3xl shadow-2xl flex flex-col"
-            style={{ backgroundColor: T.bg }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div
-              className="p-8 border-b-2 flex justify-between items-center"
-              style={{ borderColor: T.gold }}
-            >
-              <h2
-                className="text-3xl font-bold"
-                style={{ color: T.ink }}
-              >
-                Checkout - Etapa {checkoutStep + 1} de 3
-              </h2>
-              <button
-                className="text-3xl hover:scale-110 transition"
-                style={{ color: T.ink }}
-                onClick={() => setShowCheckout(false)}
-              >
-                ×
-              </button>
-            </div>
-            <div className="flex-1 overflow-y-auto p-8">
-              {checkoutStep === 0 && (
-                <div>
-                  <h3
-                    className="text-2xl font-bold mb-6"
-                    style={{ color: T.ink }}
-                  >
-                    Revisar Carrinho
-                  </h3>
-                  <CartList showControls={false} />
-                </div>
-              )}
-              {checkoutStep === 1 && (
-                <div>
-                  <h3
-                    className="text-2xl font-bold mb-8"
-                    style={{ color: T.ink }}
-                  >
-                    Informações de Envio
-                  </h3>
-                  <div className="space-y-4">
-                    <input
-                      placeholder="Nome completo"
-                      className="w-full p-4 border-2 rounded-xl text-lg"
-                      style={{ borderColor: T.gold, backgroundColor: T.accent }}
-                      value={shippingInfo.fullName}
-                      onChange={(e) =>
-                        setShippingInfo((prev) => ({
-                          ...prev,
-                          fullName: e.target.value,
-                        }))
-                      }
-                    />
-                    <input
-                      placeholder="Endereço"
-                      className="w-full p-4 border-2 rounded-xl text-lg"
-                      style={{ borderColor: T.gold, backgroundColor: T.accent }}
-                      value={shippingInfo.address}
-                      onChange={(e) =>
-                        setShippingInfo((prev) => ({
-                          ...prev,
-                          address: e.target.value,
-                        }))
-                      }
-                    />
-                    <div className="grid grid-cols-2 gap-4">
-                      <input
-                        placeholder="Cidade"
-                        className="p-4 border-2 rounded-xl text-lg"
-                        style={{ borderColor: T.gold, backgroundColor: T.accent }}
-                        value={shippingInfo.city}
-                        onChange={(e) =>
-                          setShippingInfo((prev) => ({
-                            ...prev,
-                            city: e.target.value,
-                          }))
-                        }
-                      />
-                      <input
-                        placeholder="Estado (UF)"
-                        className="p-4 border-2 rounded-xl text-lg"
-                        style={{ borderColor: T.gold, backgroundColor: T.accent }}
-                        value={shippingInfo.state}
-                        onChange={(e) =>
-                          setShippingInfo((prev) => ({
-                            ...prev,
-                            state: e.target.value,
-                          }))
-                        }
-                      />
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <input
-                        placeholder="CEP"
-                        className="p-4 border-2 rounded-xl text-lg"
-                        style={{ borderColor: T.gold, backgroundColor: T.accent }}
-                        value={shippingInfo.zipCode}
-                        onChange={(e) =>
-                          setShippingInfo((prev) => ({
-                            ...prev,
-                            zipCode: e.target.value,
-                          }))
-                        }
-                      />
-                      <input
-                        placeholder="Telefone"
-                        className="p-4 border-2 rounded-xl text-lg"
-                        style={{ borderColor: T.gold, backgroundColor: T.accent }}
-                        value={shippingInfo.phone}
-                        onChange={(e) =>
-                          setShippingInfo((prev) => ({
-                            ...prev,
-                            phone: e.target.value,
-                          }))
-                        }
-                      />
-                    </div>
-                  </div>
-                </div>
-              )}
-              {checkoutStep === 2 && (
-                <div>
-                  <h3
-                    className="text-2xl font-bold mb-8"
-                    style={{ color: T.ink }}
-                  >
-                    Dados do Pagamento
-                  </h3>
-                  <div className="space-y-4">
-                    <input
-                      placeholder="Número do cartão (**** **** **** ****)"
-                      className="w-full p-4 border-2 rounded-xl text-lg"
-                      style={{ borderColor: T.gold, backgroundColor: T.accent }}
-                      value={paymentInfo.cardNumber}
-                      onChange={(e) =>
-                        setPaymentInfo((prev) => ({
-                          ...prev,
-                          cardNumber: e.target.value,
-                        }))
-                      }
-                    />
-                    <div className="grid grid-cols-2 gap-4">
-                      <input
-                        placeholder="Validade (MM/AA)"
-                        className="p-4 border-2 rounded-xl text-lg"
-                        style={{ borderColor: T.gold, backgroundColor: T.accent }}
-                        value={paymentInfo.expiry}
-                        onChange={(e) =>
-                          setPaymentInfo((prev) => ({
-                            ...prev,
-                            expiry: e.target.value,
-                          }))
-                        }
-                      />
-                      <input
-                        placeholder="CVV"
-                        className="p-4 border-2 rounded-xl text-lg"
-                        style={{ borderColor: T.gold, backgroundColor: T.accent }}
-                        value={paymentInfo.cvv}
-                        onChange={(e) =>
-                          setPaymentInfo((prev) => ({
-                            ...prev,
-                            cvv: e.target.value,
-                          }))
-                        }
-                      />
-                    </div>
-                    <input
-                      placeholder="Nome no cartão"
-                      className="w-full p-4 border-2 rounded-xl text-lg"
-                      style={{ borderColor: T.gold, backgroundColor: T.accent }}
-                      value={paymentInfo.cardHolder}
-                      onChange={(e) =>
-                        setPaymentInfo((prev) => ({
-                          ...prev,
-                          cardHolder: e.target.value,
-                        }))
-                      }
-                    />
-                  </div>
-                </div>
-              )}
-            </div>
-            <div
-              className="p-8 border-t-2 flex gap-4"
-              style={{ borderColor: T.gold }}
-            >
-              {checkoutStep > 0 && (
-                <button
-                  className="flex-1 bg-gray-300 hover:bg-gray-400 py-4 rounded-xl font-semibold transition"
-                  onClick={prevCheckoutStep}
-                >
-                  Anterior
-                </button>
-              )}
-              <button
-                className="flex-1 bg-blue-500 hover:bg-blue-600 text-white py-4 rounded-xl font-bold text-lg transition shadow-lg"
-                onClick={nextCheckoutStep}
-              >
-                {checkoutStep < 2 ? 'Próximo' : 'Finalizar Pedido'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
+      {isMobile && showFilters && <div style={backdropStyle} onClick={() => setShowFilters(false)} />}
+    </>
   );
 }

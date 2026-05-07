@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useMemo } from 'react';
+'use client';
+import { useState, useEffect, useMemo } from 'react';
 import { createClient } from '@supabase/supabase-js';
 
 const supabaseUrl = 'https://kylqszyuwnzzuhaegdhj.supabase.co';
@@ -6,74 +7,154 @@ const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYm
 
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
+const fallbackProducts = [
+  {
+    id: 1,
+    name: 'Smartphone X',
+    price: 999.99,
+    image: 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=300&h=400&fit=crop',
+    category: 'Eletrônicos',
+    description: 'Smartphone topo de linha com câmera incrível.'
+  },
+  {
+    id: 2,
+    name: 'Camiseta Básica',
+    price: 49.90,
+    image: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=300&h=400&fit=crop',
+    category: 'Roupas',
+    description: 'Camiseta confortável para o dia a dia.'
+  },
+  {
+    id: 3,
+    name: 'Notebook Pro',
+    price: 2999.99,
+    image: 'https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=300&h=400&fit=crop',
+    category: 'Eletrônicos',
+    description: 'Notebook poderoso para trabalho e jogos.'
+  },
+  {
+    id: 4,
+    name: 'Calça Jeans',
+    price: 129.90,
+    image: 'https://images.unsplash.com/photo-1542272604-787c3835535d?w=300&h=400&fit=crop',
+    category: 'Roupas',
+    description: 'Jeans clássico e durável.'
+  },
+  {
+    id: 5,
+    name: 'Fone de Ouvido',
+    price: 199.99,
+    image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=300&h=400&fit=crop',
+    category: 'Eletrônicos',
+    description: 'Fone sem fio com cancelamento de ruído.'
+  },
+  {
+    id: 6,
+    name: 'Vestido Floral',
+    price: 89.90,
+    image: 'https://images.unsplash.com/photo-1487222474749-6d22f09e2def?w=300&h=400&fit=crop',
+    category: 'Roupas',
+    description: 'Vestido leve e elegante para o verão.'
+  },
+  {
+    id: 7,
+    name: 'Sofá Moderno',
+    price: 1599.99,
+    image: 'https://images.unsplash.com/photo-1558618047-3c8c76bbb17e?w=300&h=400&fit=crop',
+    category: 'Casa',
+    description: 'Sofá confortável para a sala.'
+  },
+  {
+    id: 8,
+    name: 'Tênis Esportivo',
+    price: 249.90,
+    image: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=300&h=400&fit=crop',
+    category: 'Esportes',
+    description: 'Tênis para corrida e academia.'
+  },
+  {
+    id: 9,
+    name: 'Tablet Air',
+    price: 799.99,
+    image: 'https://images.unsplash.com/photo-1567581935884-3349723552ca?w=300&h=400&fit=crop',
+    category: 'Eletrônicos',
+    description: 'Tablet leve e versátil.'
+  },
+  {
+    id: 10,
+    name: 'Jaqueta de Couro',
+    price: 399.90,
+    image: 'https://images.unsplash.com/photo-1551028719-00167b16eac5?w=300&h=400&fit=crop',
+    category: 'Roupas',
+    description: 'Jaqueta estilosa para o inverno.'
+  },
+  {
+    id: 11,
+    name: 'Mesa de Jantar',
+    price: 899.99,
+    image: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=300&h=400&fit=crop',
+    category: 'Casa',
+    description: 'Mesa elegante para 6 pessoas.'
+  },
+  {
+    id: 12,
+    name: 'Bola de Futebol',
+    price: 79.90,
+    image: 'https://images.unsplash.com/photo-1579952363873-27d3bfad9c3b?w=300&h=400&fit=crop',
+    category: 'Esportes',
+    description: 'Bola oficial para jogos.'
+  }
+];
+
 export default function Home() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [cart, setCart] = useState([]);
-  const [showModal, setShowModal] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
-  const [showCartDrawer, setShowCartDrawer] = useState(false);
-  const [showFilters, setShowFilters] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
-  const [filters, setFilters] = useState({ category: '' });
-  const [checkoutStep, setCheckoutStep] = useState(0);
-  const [shippingInfo, setShippingInfo] = useState({ nome: '', email: '', endereco: '', cidade: '', cep: '', telefone: '' });
-  const [paymentInfo, setPaymentInfo] = useState({ cartao: '', validade: '', cvv: '' });
+  const [showModal, setShowModal] = useState(false);
+  const [showCart, setShowCart] = useState(false);
+  const [showCheckout, setShowCheckout] = useState(false);
+  const [checkoutForm, setCheckoutForm] = useState({ name: '', email: '', address: '' });
+  const [filters, setFilters] = useState({ category: '', priceMax: 1000 });
 
-  const theme = {
-    primary: '#4F46E5',
-    secondary: '#10B981',
-    danger: '#EF4444',
-    light: '#F9FAFB',
-    dark: '#1F2937',
-    gray: '#6B7280',
-  };
+  const cartItemCount = cart.reduce((sum, item) => sum + item.quantity, 0);
+  const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
 
-  const cartCount = useMemo(() => cart.reduce((sum, item) => sum + item.quantity, 0), [cart]);
-
-  const getTotal = useMemo(() => 
-    cart.reduce((sum, item) => sum + (item.preco * item.quantity), 0), 
-    [cart]
-  );
-
-  const categories = useMemo(() => {
-    return [...new Set(products.map(p => p.categoria).filter(Boolean))];
+  const availableCategories = useMemo(() => {
+    const cats = new Set(products.map(p => p.category));
+    return ['Todos', ...Array.from(cats)];
   }, [products]);
 
+  const filteredProducts = products.filter(p =>
+    (!filters.category || p.category === filters.category) &&
+    p.price <= filters.priceMax
+  );
+
   useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-    handleResize();
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    async function fetchProducts() {
+      try {
+        setLoading(true);
+        const { data, error } = await supabase
+          .from('products')
+          .select('*')
+          .order('id');
+        if (error) throw error;
+        setProducts(data || []);
+      } catch (error) {
+        console.error('Erro ao buscar produtos:', error);
+        setProducts(fallbackProducts);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchProducts();
   }, []);
 
-  const fetchProducts = async () => {
-    setLoading(true);
-    let query = supabase.from('produtos').select('*');
-    if (filters.category) {
-      query = query.eq('categoria', filters.category);
-    }
-    query = query.order('destaque', { ascending: false }).order('criado_em', { ascending: false });
-    const { data, error } = await query;
-    if (error) {
-      console.error('Erro ao buscar produtos:', error);
-    } else {
-      setProducts(data || []);
-    }
-    setLoading(false);
-  };
-
-  useEffect(() => {
-    fetchProducts();
-  }, [filters.category]);
-
   const addToCart = (product) => {
-    setCart((prev) => {
-      const existing = prev.find((p) => p.id === product.id);
+    setCart(prev => {
+      const existing = prev.find(p => p.id === product.id);
       if (existing) {
-        return prev.map((p) =>
+        return prev.map(p =>
           p.id === product.id ? { ...p, quantity: p.quantity + 1 } : p
         );
       }
@@ -81,688 +162,310 @@ export default function Home() {
     });
   };
 
-  const updateQuantity = (productId, quantity) => {
-    if (quantity <= 0) {
-      setCart((prev) => prev.filter((p) => p.id !== productId));
+  const updateQuantity = (id, newQty) => {
+    if (newQty < 1) {
+      removeFromCart(id);
       return;
     }
-    setCart((prev) =>
-      prev.map((p) => (p.id === productId ? { ...p, quantity } : p))
+    setCart(prev =>
+      prev.map(item => (item.id === id ? { ...item, quantity: newQty } : item))
     );
   };
 
-  const removeFromCart = (productId) => {
-    setCart((prev) => prev.filter((p) => p.id !== productId));
+  const removeFromCart = (id) => {
+    setCart(prev => prev.filter(item => item.id !== id));
   };
 
-  const openModal = (product) => {
-    setSelectedProduct(product);
-    setShowModal(true);
-  };
-
-  const applyFilter = (cat) => {
-    setFilters({ category: cat });
-  };
-
-  const startCheckout = () => {
-    if (cart.length === 0) return;
-    setCheckoutStep(1);
-  };
-
-  const nextStep = () => {
-    setCheckoutStep((prev) => prev + 1);
-  };
-
-  const prevStep = () => {
-    setCheckoutStep((prev) => prev - 1);
-  };
-
-  const completeCheckout = () => {
-    alert('Compra realizada com sucesso!');
+  const handleCheckout = (e) => {
+    e.preventDefault();
+    console.log('Dados do pedido:', { ...checkoutForm, items: cart, total });
+    alert(`Pedido de ${checkoutForm.name} realizado com sucesso! Total: R$${total.toFixed(2)}`);
     setCart([]);
-    setCheckoutStep(0);
-    setShippingInfo({ nome: '', email: '', endereco: '', cidade: '', cep: '', telefone: '' });
-    setPaymentInfo({ cartao: '', validade: '', cvv: '' });
-  };
-
-  const headerStyle = {
-    position: 'fixed',
-    top: 0,
-    left: 0,
-    right: 0,
-    height: '60px',
-    backgroundColor: 'white',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: '0 20px',
-    boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-    zIndex: 1000,
-    fontFamily: 'Arial, sans-serif',
-  };
-
-  const logoStyle = {
-    margin: 0,
-    color: theme.dark,
-    fontSize: '1.5em',
-  };
-
-  const cartButtonStyle = {
-    position: 'relative',
-    background: 'none',
-    border: 'none',
-    fontSize: '1.8em',
-    cursor: 'pointer',
-    padding: '10px',
-  };
-
-  const badgeStyle = {
-    position: 'absolute',
-    top: 0,
-    right: 0,
-    backgroundColor: theme.danger,
-    color: 'white',
-    borderRadius: '50%',
-    width: '20px',
-    height: '20px',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    fontSize: '0.8em',
-    fontWeight: 'bold',
-  };
-
-  const sidebarStyle = {
-    position: 'fixed',
-    top: '60px',
-    left: 0,
-    width: isMobile ? '80vw' : '250px',
-    height: 'calc(100vh - 60px)',
-    backgroundColor: theme.light,
-    padding: '20px',
-    overflowY: 'auto',
-    zIndex: 999,
-    transform: isMobile && !showFilters ? 'translateX(-100%)' : 'translateX(0)',
-    transition: 'transform 0.3s ease',
-    borderRight: `1px solid ${theme.gray}`,
-    fontFamily: 'Arial, sans-serif',
-  };
-
-  const mainStyle = {
-    marginLeft: isMobile ? 0 : '270px',
-    marginTop: '60px',
-    padding: '20px',
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-    gap: '20px',
-    minHeight: 'calc(100vh - 60px)',
-    width: 'calc(100vw - 40px)',
-    boxSizing: 'border-box',
-    fontFamily: 'Arial, sans-serif',
-  };
-
-  const getFilterBtnStyle = (active) => ({
-    display: 'block',
-    width: '100%',
-    padding: '12px',
-    marginBottom: '10px',
-    backgroundColor: active ? theme.primary : 'transparent',
-    color: active ? 'white' : theme.dark,
-    border: `1px solid ${active ? 'transparent' : theme.gray}`,
-    borderRadius: '6px',
-    cursor: 'pointer',
-    fontSize: '1em',
-  });
-
-  const closeBtnStyle = {
-    width: '100%',
-    padding: '12px',
-    backgroundColor: theme.gray,
-    color: 'white',
-    border: 'none',
-    borderRadius: '6px',
-    cursor: 'pointer',
-    marginTop: '20px',
-  };
-
-  const cartDrawerStyle = {
-    position: 'fixed',
-    top: '60px',
-    right: showCartDrawer ? '0' : (isMobile ? '-100vw' : '-400px'),
-    width: isMobile ? '100vw' : '400px',
-    height: 'calc(100vh - 60px)',
-    backgroundColor: 'white',
-    boxShadow: isMobile ? '0 0 20px rgba(0,0,0,0.3)' : '-4px 0 12px rgba(0,0,0,0.15)',
-    zIndex: 1001,
-    transition: 'right 0.3s ease',
-    overflowY: 'auto',
-    fontFamily: 'Arial, sans-serif',
-  };
-
-  const cardStyle = {
-    border: '1px solid #ddd',
-    borderRadius: '8px',
-    overflow: 'hidden',
-    backgroundColor: 'white',
-    boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-  };
-
-  const imageStyle = {
-    width: '100%',
-    height: '200px',
-    objectFit: 'cover',
-  };
-
-  const destaqueBadge = {
-    position: 'absolute',
-    top: '10px',
-    left: '10px',
-    backgroundColor: '#FCD34D',
-    color: theme.dark,
-    padding: '4px 8px',
-    borderRadius: '12px',
-    fontSize: '0.8em',
-    fontWeight: 'bold',
-  };
-
-  const imageContainer = {
-    position: 'relative',
-    height: '200px',
-  };
-
-  const cardContentStyle = {
-    padding: '16px',
-  };
-
-  const titleStyle = {
-    margin: '0 0 8px 0',
-    fontSize: '1.2em',
-    color: theme.dark,
-  };
-
-  const textStyle = {
-    margin: '0 0 12px 0',
-    color: theme.gray,
-    fontSize: '0.9em',
-  };
-
-  const priceStyle = {
-    fontSize: '1.4em',
-    fontWeight: 'bold',
-    color: theme.primary,
-  };
-
-  const oldPriceStyle = {
-    fontSize: '1.1em',
-    color: theme.gray,
-    textDecoration: 'line-through',
-  };
-
-  const primaryBtnStyle = {
-    flex: 1,
-    padding: '10px',
-    backgroundColor: theme.primary,
-    color: 'white',
-    border: 'none',
-    borderRadius: '6px',
-    cursor: 'pointer',
-    fontWeight: '500',
-  };
-
-  const secondaryBtnStyle = {
-    flex: 1,
-    padding: '10px',
-    backgroundColor: 'transparent',
-    color: theme.primary,
-    border: `1px solid ${theme.primary}`,
-    borderRadius: '6px',
-    cursor: 'pointer',
-    fontWeight: '500',
-  };
-
-  const ProductCard = ({ product, onOpenModal, onAddToCart }) => {
-    const oldPrice = product.preco_antigo;
-    return (
-      <div style={cardStyle}>
-        <div style={imageContainer}>
-          <img src={product.foto_url} alt={product.nome} style={imageStyle} />
-          {product.destaque && <div style={destaqueBadge}>Destaque</div>}
-        </div>
-        <div style={cardContentStyle}>
-          <h3 style={titleStyle}>{product.nome}</h3>
-          <p style={textStyle}>{product.categoria} - {product.material}</p>
-          <div style={{ display: 'flex', alignItems: 'baseline', gap: '10px', marginBottom: '10px' }}>
-            <span style={priceStyle}>
-              {product.preco.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-            </span>
-            {oldPrice && (
-              <span style={oldPriceStyle}>
-                {oldPrice.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-              </span>
-            )}
-          </div>
-          <div style={{ display: 'flex', gap: '10px' }}>
-            <button onClick={() => onOpenModal(product)} style={secondaryBtnStyle}>
-              Ver Detalhes
-            </button>
-            <button onClick={() => onAddToCart(product)} style={primaryBtnStyle}>
-              Adicionar
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
-  const cartItemStyle = {
-    display: 'flex',
-    gap: '12px',
-    padding: '16px 0',
-    borderBottom: '1px solid #eee',
-    alignItems: 'center',
-  };
-
-  const smallImageStyle = {
-    width: '60px',
-    height: '60px',
-    objectFit: 'cover',
-    borderRadius: '4px',
-  };
-
-  const removeBtnStyle = {
-    backgroundColor: theme.danger,
-    color: 'white',
-    border: 'none',
-    padding: '8px 12px',
-    borderRadius: '4px',
-    cursor: 'pointer',
-    fontSize: '0.9em',
-  };
-
-  const CartItem = ({ item, onUpdateQuantity, onRemove }) => (
-    <div style={cartItemStyle}>
-      <img src={item.foto_url} alt={item.nome} style={smallImageStyle} />
-      <div style={{ flex: 1 }}>
-        <h4 style={{ margin: '0 0 4px 0', fontSize: '1em' }}>{item.nome}</h4>
-        <p style={{ margin: 0, color: theme.gray }}>
-          {item.preco.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-        </p>
-      </div>
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', minWidth: '80px' }}>
-        <button
-          onClick={() => onUpdateQuantity(item.id, item.quantity + 1)}
-          style={{ background: theme.primary, color: 'white', border: 'none', width: '30px', height: '30px', borderRadius: '50%', cursor: 'pointer' }}
-        >
-          +
-        </button>
-        <span style={{ fontWeight: 'bold' }}>{item.quantity}</span>
-        <button
-          onClick={() => onUpdateQuantity(item.id, item.quantity - 1)}
-          style={{ background: theme.gray, color: 'white', border: 'none', width: '30px', height: '30px', borderRadius: '50%', cursor: 'pointer' }}
-        >
-          -
-        </button>
-      </div>
-      <button onClick={() => onRemove(item.id)} style={removeBtnStyle}>
-        Remover
-      </button>
-    </div>
-  );
-
-  const buyBtnStyle = {
-    width: '100%',
-    padding: '14px',
-    backgroundColor: theme.primary,
-    color: 'white',
-    border: 'none',
-    borderRadius: '6px',
-    fontSize: '1.1em',
-    fontWeight: '500',
-    cursor: 'pointer',
-    marginTop: '10px',
-  };
-
-  const modalOverlayStyle = {
-    position: 'fixed',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    zIndex: 1000,
-  };
-
-  const modalContentStyle = {
-    backgroundColor: 'white',
-    width: '90vw',
-    maxWidth: '500px',
-    maxHeight: '90vh',
-    borderRadius: '12px',
-    overflow: 'hidden',
-    position: 'relative',
-  };
-
-  const modalImageStyle = {
-    width: '100%',
-    height: '300px',
-    objectFit: 'cover',
-  };
-
-  const closeModalStyle = {
-    position: 'absolute',
-    top: '10px',
-    right: '15px',
-    background: 'none',
-    border: 'none',
-    fontSize: '2em',
-    cursor: 'pointer',
-    color: theme.gray,
-  };
-
-  const ProductModal = ({ product, onClose, onAddToCart }) => (
-    <div style={modalOverlayStyle} onClick={onClose}>
-      <div style={modalContentStyle} onClick={(e) => e.stopPropagation()}>
-        <button style={closeModalStyle} onClick={onClose}>×</button>
-        <img src={product.foto_url} alt={product.nome} style={modalImageStyle} />
-        <div style={{ padding: '24px' }}>
-          <h2 style={{ ...titleStyle, fontSize: '1.8em', marginBottom: '12px' }}>{product.nome}</h2>
-          <p style={{ ...textStyle, fontSize: '1.1em', marginBottom: '20px' }}>
-            {product.categoria} - {product.material}
-          </p>
-          <div style={{ ...priceStyle, fontSize: '2em', marginBottom: '20px' }}>
-            {product.preco.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-          </div>
-          <button 
-            onClick={() => {
-              onAddToCart(product);
-              onClose();
-            }} 
-            style={{ ...primaryBtnStyle, width: '100%', padding: '16px', fontSize: '1.2em' }}
-          >
-            Adicionar ao Carrinho
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-
-  const checkoutOverlayStyle = {
-    position: 'fixed',
-    top: 0,
-    left: 0,
-    width: '100vw',
-    height: '100vh',
-    backgroundColor: 'white',
-    zIndex: 1002,
-    overflowY: 'auto',
-    fontFamily: 'Arial, sans-serif',
-  };
-
-  const checkoutHeaderStyle = {
-    position: 'sticky',
-    top: 0,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: '20px',
-    backgroundColor: 'white',
-    borderBottom: '1px solid #eee',
-    zIndex: 10,
-  };
-
-  const stepLabelStyle = {
-    fontSize: '1.2em',
-    fontWeight: 'bold',
-    color: theme.dark,
-  };
-
-  const formInputStyle = {
-    width: '100%',
-    padding: '12px',
-    marginBottom: '16px',
-    border: '1px solid #ddd',
-    borderRadius: '6px',
-    fontSize: '1em',
-    boxSizing: 'border-box',
-  };
-
-  const checkoutBtnStyle = (primary = true) => ({
-    width: '48%',
-    padding: '14px',
-    border: 'none',
-    borderRadius: '6px',
-    fontSize: '1em',
-    fontWeight: '500',
-    cursor: 'pointer',
-    marginBottom: '20px',
-    backgroundColor: primary ? theme.primary : theme.gray,
-    color: 'white',
-  });
-
-  const CheckoutSteps = () => (
-    <div style={checkoutOverlayStyle}>
-      <div style={checkoutHeaderStyle}>
-        <button onClick={() => setCheckoutStep(0)} style={{ background: 'none', border: 'none', fontSize: '1.5em', cursor: 'pointer' }}>
-          ←
-        </button>
-        <div style={stepLabelStyle}>Passo {checkoutStep} de 3</div>
-        <div />
-      </div>
-      <div style={{ maxWidth: '600px', margin: '0 auto', padding: '20px' }}>
-        {checkoutStep === 1 && (
-          <>
-            <h2 style={{ color: theme.dark, marginBottom: '20px' }}>Revisão do Carrinho</h2>
-            {cart.map((item) => (
-              <CartItem key={item.id} item={item} onUpdateQuantity={updateQuantity} onRemove={removeFromCart} />
-            ))}
-            <div style={{ fontSize: '1.5em', fontWeight: 'bold', textAlign: 'right', margin: '20px 0', color: theme.primary }}>
-              Total: {getTotal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-            </div>
-            <button onClick={nextStep} style={buyBtnStyle}>Próximo: Entrega</button>
-          </>
-        )}
-        {checkoutStep === 2 && (
-          <>
-            <h2 style={{ color: theme.dark, marginBottom: '20px' }}>Informações de Entrega</h2>
-            <input
-              placeholder="Nome Completo"
-              value={shippingInfo.nome}
-              onChange={(e) => setShippingInfo({ ...shippingInfo, nome: e.target.value })}
-              style={formInputStyle}
-            />
-            <input
-              placeholder="Email"
-              value={shippingInfo.email}
-              onChange={(e) => setShippingInfo({ ...shippingInfo, email: e.target.value })}
-              style={formInputStyle}
-            />
-            <input
-              placeholder="Endereço"
-              value={shippingInfo.endereco}
-              onChange={(e) => setShippingInfo({ ...shippingInfo, endereco: e.target.value })}
-              style={formInputStyle}
-            />
-            <div style={{ display: 'flex', gap: '10px' }}>
-              <input
-                placeholder="Cidade"
-                value={shippingInfo.cidade}
-                onChange={(e) => setShippingInfo({ ...shippingInfo, cidade: e.target.value })}
-                style={{ ...formInputStyle, flex: 1 }}
-              />
-              <input
-                placeholder="CEP"
-                value={shippingInfo.cep}
-                onChange={(e) => setShippingInfo({ ...shippingInfo, cep: e.target.value })}
-                style={{ ...formInputStyle, flex: 1 }}
-              />
-            </div>
-            <input
-              placeholder="Telefone"
-              value={shippingInfo.telefone}
-              onChange={(e) => setShippingInfo({ ...shippingInfo, telefone: e.target.value })}
-              style={formInputStyle}
-            />
-            <div style={{ display: 'flex', gap: '10px' }}>
-              <button onClick={prevStep} style={checkoutBtnStyle(false)}>Voltar</button>
-              <button onClick={nextStep} style={checkoutBtnStyle(true)}>Próximo: Pagamento</button>
-            </div>
-          </>
-        )}
-        {checkoutStep === 3 && (
-          <>
-            <h2 style={{ color: theme.dark, marginBottom: '20px' }}>Pagamento</h2>
-            <input
-              placeholder="Número do Cartão"
-              value={paymentInfo.cartao}
-              onChange={(e) => setPaymentInfo({ ...paymentInfo, cartao: e.target.value })}
-              style={formInputStyle}
-            />
-            <div style={{ display: 'flex', gap: '10px' }}>
-              <input
-                placeholder="Validade (MM/AA)"
-                value={paymentInfo.validade}
-                onChange={(e) => setPaymentInfo({ ...paymentInfo, validade: e.target.value })}
-                style={{ ...formInputStyle, flex: 1 }}
-              />
-              <input
-                placeholder="CVV"
-                value={paymentInfo.cvv}
-                onChange={(e) => setPaymentInfo({ ...paymentInfo, cvv: e.target.value })}
-                style={{ ...formInputStyle, flex: 1 }}
-              />
-            </div>
-            <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
-              <button onClick={prevStep} style={checkoutBtnStyle(false)}>Voltar</button>
-              <button onClick={completeCheckout} style={checkoutBtnStyle(true)}>Concluir Compra</button>
-            </div>
-          </>
-        )}
-      </div>
-    </div>
-  );
-
-  const backdropStyle = {
-    position: 'fixed',
-    top: '60px',
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    zIndex: 998,
+    setCheckoutForm({ name: '', email: '', address: '' });
+    setShowCheckout(false);
+    setShowCart(false);
   };
 
   return (
-    <>
-      <header style={headerStyle}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-          <h1 style={logoStyle}>Loja Supabase</h1>
-          {isMobile && (
-            <button
-              onClick={() => setShowFilters(!showFilters)}
-              style={{ background: 'none', border: 'none', fontSize: '1.5em', cursor: 'pointer', color: theme.dark }}
-            >
-              ☰
-            </button>
+    <div className="min-h-screen bg-gray-100">
+      {/* Header */}
+      <header className="bg-white shadow-md p-4 flex justify-between items-center">
+        <h1 className="text-2xl md:text-3xl font-bold text-gray-800">Minha Loja</h1>
+        <button
+          onClick={() => setShowCart(true)}
+          className="relative bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors flex items-center gap-2"
+        >
+          🛒 Carrinho
+          {cartItemCount > 0 && (
+            <span className="absolute -top-2 -right-2 bg-red-500 text-xs px-2 py-1 rounded-full">
+              {cartItemCount}
+            </span>
           )}
-        </div>
-        <button onClick={() => setShowCartDrawer(true)} style={cartButtonStyle}>
-          🛒
-          {cartCount > 0 && <span style={badgeStyle}>{cartCount}</span>}
         </button>
       </header>
 
-      <aside style={sidebarStyle}>
-        <h3 style={{ marginBottom: '20px', color: theme.dark }}>Filtros</h3>
-        <div>
-          <button
-            onClick={() => applyFilter('')}
-            style={getFilterBtnStyle(filters.category === '')}
-          >
-            Todos
-          </button>
-          {categories.map((cat) => (
-            <button
-              key={cat}
-              onClick={() => applyFilter(cat)}
-              style={getFilterBtnStyle(filters.category === cat)}
-            >
-              {cat}
-            </button>
-          ))}
-        </div>
-        {isMobile && (
-          <button onClick={() => setShowFilters(false)} style={closeBtnStyle}>
-            Fechar
-          </button>
-        )}
-      </aside>
-
-      <main style={mainStyle}>
-        {loading ? (
-          <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '40px', color: theme.gray }}>
-            Carregando produtos...
-          </div>
-        ) : products.length === 0 ? (
-          <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '40px', color: theme.gray }}>
-            Nenhum produto encontrado.
-          </div>
-        ) : (
-          products.map((product) => (
-            <ProductCard
-              key={product.id}
-              product={product}
-              onOpenModal={openModal}
-              onAddToCart={addToCart}
-            />
-          ))
-        )}
-      </main>
-
-      {showCartDrawer && <div style={cartDrawerStyle}>
-        <div style={{ padding: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #eee' }}>
-          <h2 style={{ margin: 0, color: theme.dark }}>Carrinho ({cartCount})</h2>
-          <button onClick={() => setShowCartDrawer(false)} style={{ background: 'none', border: 'none', fontSize: '1.8em', cursor: 'pointer' }}>✕</button>
-        </div>
-        <div style={{ padding: '20px' }}>
-          {cart.length === 0 ? (
-            <p style={{ textAlign: 'center', color: theme.gray, margin: '40px 0' }}>Carrinho vazio</p>
-          ) : (
-            cart.map((item) => (
-              <CartItem
-                key={item.id}
-                item={item}
-                onUpdateQuantity={updateQuantity}
-                onRemove={removeFromCart}
+      <div className="flex flex-col lg:flex-row gap-6 p-4 lg:p-8 max-w-7xl mx-auto">
+        {/* Sidebar Filtros */}
+        <aside className="w-full lg:w-64 bg-white p-6 rounded-lg shadow-lg shrink-0">
+          <h2 className="text-xl font-semibold mb-4 text-gray-800">Filtros</h2>
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium mb-2 text-gray-700">Categoria</label>
+              <select
+                value={filters.category}
+                onChange={(e) =>
+                  setFilters({ ...filters, category: e.target.value === 'Todos' ? '' : e.target.value })
+                }
+                className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                {availableCategories.map((cat) => (
+                  <option key={cat} value={cat === 'Todos' ? '' : cat}>
+                    {cat}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-2 text-gray-700">Preço Máximo</label>
+              <input
+                type="range"
+                min="0"
+                max="2000"
+                step="50"
+                value={filters.priceMax}
+                onChange={(e) => setFilters({ ...filters, priceMax: Number(e.target.value) })}
+                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-500"
               />
-            ))
-          )}
-          {cart.length > 0 && (
-            <div style={{ marginTop: '20px', paddingTop: '20px', borderTop: '1px solid #eee' }}>
-              <div style={{ fontSize: '1.4em', fontWeight: 'bold', textAlign: 'right', marginBottom: '20px', color: theme.primary }}>
-                Total: {getTotal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-              </div>
-              <button onClick={startCheckout} style={buyBtnStyle} disabled={cart.length === 0}>
-                Finalizar Compra
-              </button>
+              <span className="text-sm text-gray-600">R$ 0 - R$ {filters.priceMax.toLocaleString('pt-BR')}</span>
+            </div>
+          </div>
+        </aside>
+
+        {/* Main Grid */}
+        <main className="flex-1">
+          {loading ? (
+            <div className="flex justify-center items-center h-64">
+              <div className="text-lg text-gray-600">Carregando produtos...</div>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {filteredProducts.map((product) => (
+                <div
+                  key={product.id}
+                  className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-shadow cursor-pointer"
+                  onClick={() => {
+                    setSelectedProduct(product);
+                    setShowModal(true);
+                  }}
+                >
+                  <img
+                    src={product.image}
+                    alt={product.name}
+                    className="w-full h-48 object-cover"
+                  />
+                  <div className="p-4">
+                    <h3 className="font-semibold text-lg mb-1 text-gray-800">{product.name}</h3>
+                    <p className="text-2xl font-bold text-blue-600 mb-3">
+                      R$ {product.price.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                    </p>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        addToCart(product);
+                      }}
+                      className="w-full bg-green-500 text-white py-2 px-4 rounded-md hover:bg-green-600 transition-colors font-medium"
+                    >
+                      Adicionar ao Carrinho
+                    </button>
+                  </div>
+                </div>
+              ))}
             </div>
           )}
-        </div>
-      </div>}
+          {filteredProducts.length === 0 && !loading && (
+            <div className="text-center py-12">
+              <p className="text-gray-500 text-lg">Nenhum produto encontrado.</p>
+            </div>
+          )}
+        </main>
+      </div>
 
+      {/* Modal Produto */}
       {showModal && selectedProduct && (
-        <ProductModal
-          product={selectedProduct}
-          onClose={() => setShowModal(false)}
-          onAddToCart={addToCart}
-        />
+        <div
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+          onClick={() => setShowModal(false)}
+        >
+          <div
+            className="bg-white rounded-lg p-8 max-w-md w-full max-h-[90vh] overflow-y-auto shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <img
+              src={selectedProduct.image}
+              alt={selectedProduct.name}
+              className="w-full h-64 object-cover rounded-lg mb-4"
+            />
+            <h2 className="text-2xl font-bold mb-2 text-gray-800">{selectedProduct.name}</h2>
+            <p className="text-gray-600 mb-4">{selectedProduct.description}</p>
+            <p className="text-3xl font-bold text-blue-600 mb-6">
+              R$ {selectedProduct.price.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+            </p>
+            <button
+              onClick={() => {
+                addToCart(selectedProduct);
+                setShowModal(false);
+              }}
+              className="w-full bg-green-500 text-white py-3 px-6 rounded-md hover:bg-green-600 transition-colors font-bold mb-3"
+            >
+              Adicionar ao Carrinho
+            </button>
+            <button
+              onClick={() => setShowModal(false)}
+              className="w-full bg-gray-500 text-white py-3 px-6 rounded-md hover:bg-gray-600 transition-colors"
+            >
+              Fechar
+            </button>
+          </div>
+        </div>
       )}
 
-      {checkoutStep > 0 && <CheckoutSteps />}
+      {/* Modal Carrinho */}
+      {showCart && (
+        <div
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+          onClick={() => setShowCart(false)}
+        >
+          <div
+            className="bg-white rounded-lg p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2 className="text-2xl font-bold mb-6 text-gray-800">Carrinho de Compras</h2>
+            {cart.length === 0 ? (
+              <p className="text-gray-500 text-center py-8">Seu carrinho está vazio.</p>
+            ) : (
+              <div className="space-y-4 mb-6">
+                {cart.map((item) => (
+                  <div key={item.id} className="flex justify-between items-center p-4 bg-gray-50 rounded-lg">
+                    <div className="flex-1">
+                      <h4 className="font-semibold text-gray-800">{item.name}</h4>
+                      <p className="text-sm text-gray-600">R$ {item.price.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
+                    </div>
+                    <div className="flex items-center gap-3 ml-4">
+                      <button
+                        onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                        className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center hover:bg-gray-300"
+                      >
+                        -
+                      </button>
+                      <span className="font-semibold w-8 text-center">{item.quantity}</span>
+                      <button
+                        onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                        className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center hover:bg-gray-300"
+                      >
+                        +
+                      </button>
+                      <span className="font-bold text-lg text-blue-600 ml-4">
+                        R$ {(item.price * item.quantity).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                      </span>
+                      <button
+                        onClick={() => removeFromCart(item.id)}
+                        className="ml-4 text-red-500 hover:text-red-700 font-semibold"
+                      >
+                        Remover
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+            {cart.length > 0 && (
+              <>
+                <div className="border-t pt-4 mb-6">
+                  <p className="text-2xl font-bold text-gray-800">
+                    Total: R$ {total.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                  </p>
+                </div>
+                <button
+                  onClick={() => setShowCheckout(true)}
+                  className="w-full bg-blue-500 text-white py-3 px-6 rounded-md hover:bg-blue-600 transition-colors font-bold mb-3"
+                >
+                  Finalizar Compra
+                </button>
+              </>
+            )}
+            <button
+              onClick={() => setShowCart(false)}
+              className="w-full bg-gray-500 text-white py-3 px-6 rounded-md hover:bg-gray-600 transition-colors"
+            >
+              Continuar Comprando
+            </button>
+          </div>
+        </div>
+      )}
 
-      {isMobile && showFilters && <div style={backdropStyle} onClick={() => setShowFilters(false)} />}
-    </>
+      {/* Modal Checkout */}
+      {showCheckout && (
+        <div
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+          onClick={() => setShowCheckout(false)}
+        >
+          <div
+            className="bg-white rounded-lg p-8 max-w-md w-full max-h-[90vh] overflow-y-auto shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2 className="text-2xl font-bold mb-6 text-gray-800">Finalizar Compra</h2>
+            <form onSubmit={handleCheckout} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-2 text-gray-700">Nome Completo</label>
+                <input
+                  type="text"
+                  value={checkoutForm.name}
+                  onChange={(e) => setCheckoutForm({ ...checkoutForm, name: e.target.value })}
+                  required
+                  className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2 text-gray-700">Email</label>
+                <input
+                  type="email"
+                  value={checkoutForm.email}
+                  onChange={(e) => setCheckoutForm({ ...checkoutForm, email: e.target.value })}
+                  required
+                  className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2 text-gray-700">Endereço</label>
+                <textarea
+                  value={checkoutForm.address}
+                  onChange={(e) => setCheckoutForm({ ...checkoutForm, address: e.target.value })}
+                  required
+                  rows={3}
+                  className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <div className="pt-4 border-t">
+                <p className="text-xl font-bold text-blue-600">
+                  Total: R$ {total.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                </p>
+              </div>
+              <button
+                type="submit"
+                className="w-full bg-green-500 text-white py-3 px-6 rounded-md hover:bg-green-600 transition-colors font-bold"
+              >
+                Confirmar Pedido
+              </button>
+            </form>
+            <button
+              onClick={() => setShowCheckout(false)}
+              className="w-full mt-3 bg-gray-500 text-white py-3 px-6 rounded-md hover:bg-gray-600 transition-colors"
+            >
+              Cancelar
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }

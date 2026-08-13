@@ -1,110 +1,6 @@
 'use client';
 import { useState, useEffect, useMemo } from 'react';
-import { createClient } from '@supabase/supabase-js';
-
-const supabaseUrl = 'https://kylqszyuwnzzuhaegdhj.supabase.co';
-const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt5bHFzenl1d256enVoYWVnZGhqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc5MDI0ODYsImV4cCI6MjA5MzQ3ODQ4Nn0.jFXnRx_fvJvaasqLx7oEx8DsE2tL9b8zMzkkKPCWbVk';
-
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
-
-const fallbackProducts = [
-  {
-    id: 1,
-    name: 'Smartphone X',
-    price: 999.99,
-    image: 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=300&h=400&fit=crop',
-    category: 'Eletrônicos',
-    description: 'Smartphone topo de linha com câmera incrível.'
-  },
-  {
-    id: 2,
-    name: 'Camiseta Básica',
-    price: 49.90,
-    image: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=300&h=400&fit=crop',
-    category: 'Roupas',
-    description: 'Camiseta confortável para o dia a dia.'
-  },
-  {
-    id: 3,
-    name: 'Notebook Pro',
-    price: 2999.99,
-    image: 'https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=300&h=400&fit=crop',
-    category: 'Eletrônicos',
-    description: 'Notebook poderoso para trabalho e jogos.'
-  },
-  {
-    id: 4,
-    name: 'Calça Jeans',
-    price: 129.90,
-    image: 'https://images.unsplash.com/photo-1542272604-787c3835535d?w=300&h=400&fit=crop',
-    category: 'Roupas',
-    description: 'Jeans clássico e durável.'
-  },
-  {
-    id: 5,
-    name: 'Fone de Ouvido',
-    price: 199.99,
-    image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=300&h=400&fit=crop',
-    category: 'Eletrônicos',
-    description: 'Fone sem fio com cancelamento de ruído.'
-  },
-  {
-    id: 6,
-    name: 'Vestido Floral',
-    price: 89.90,
-    image: 'https://images.unsplash.com/photo-1487222474749-6d22f09e2def?w=300&h=400&fit=crop',
-    category: 'Roupas',
-    description: 'Vestido leve e elegante para o verão.'
-  },
-  {
-    id: 7,
-    name: 'Sofá Moderno',
-    price: 1599.99,
-    image: 'https://images.unsplash.com/photo-1558618047-3c8c76bbb17e?w=300&h=400&fit=crop',
-    category: 'Casa',
-    description: 'Sofá confortável para a sala.'
-  },
-  {
-    id: 8,
-    name: 'Tênis Esportivo',
-    price: 249.90,
-    image: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=300&h=400&fit=crop',
-    category: 'Esportes',
-    description: 'Tênis para corrida e academia.'
-  },
-  {
-    id: 9,
-    name: 'Tablet Air',
-    price: 799.99,
-    image: 'https://images.unsplash.com/photo-1567581935884-3349723552ca?w=300&h=400&fit=crop',
-    category: 'Eletrônicos',
-    description: 'Tablet leve e versátil.'
-  },
-  {
-    id: 10,
-    name: 'Jaqueta de Couro',
-    price: 399.90,
-    image: 'https://images.unsplash.com/photo-1551028719-00167b16eac5?w=300&h=400&fit=crop',
-    category: 'Roupas',
-    description: 'Jaqueta estilosa para o inverno.'
-  },
-  {
-    id: 11,
-    name: 'Mesa de Jantar',
-    price: 899.99,
-    image: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=300&h=400&fit=crop',
-    category: 'Casa',
-    description: 'Mesa elegante para 6 pessoas.'
-  },
-  {
-    id: 12,
-    name: 'Bola de Futebol',
-    price: 79.90,
-    image: 'https://images.unsplash.com/photo-1579952363873-27d3bfad9c3b?w=300&h=400&fit=crop',
-    category: 'Esportes',
-    description: 'Bola oficial para jogos.'
-  }
-];
+import { supabase } from '../lib/supabaseClient';
 
 export default function Home() {
   const [products, setProducts] = useState([]);
@@ -112,6 +8,10 @@ export default function Home() {
   const [cart, setCart] = useState([]);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [showModal, setShowModal] = useState(false);
+  const [variants, setVariants] = useState([]);
+  const [variantsLoading, setVariantsLoading] = useState(false);
+  const [selectedColorId, setSelectedColorId] = useState(null);
+  const [selectedSizeId, setSelectedSizeId] = useState(null);
   const [showCart, setShowCart] = useState(false);
   const [showCheckout, setShowCheckout] = useState(false);
   const [checkoutForm, setCheckoutForm] = useState({ name: '', email: '', address: '' });
@@ -136,13 +36,23 @@ export default function Home() {
         setLoading(true);
         const { data, error } = await supabase
           .from('products')
-          .select('*')
-          .order('id');
+          .select('id, sku, name, category, price, description, photo_url')
+          .eq('is_active', true)
+          .order('sku');
         if (error) throw error;
-        setProducts(data || []);
+        setProducts(
+          (data || []).map((p) => ({
+            id: p.id,
+            name: p.name,
+            price: Number(p.price),
+            image: p.photo_url || null,
+            category: p.category,
+            description: p.description,
+          }))
+        );
       } catch (error) {
         console.error('Erro ao buscar produtos:', error);
-        setProducts(fallbackProducts);
+        setProducts([]);
       } finally {
         setLoading(false);
       }
@@ -150,30 +60,68 @@ export default function Home() {
     fetchProducts();
   }, []);
 
-  const addToCart = (product) => {
-    setCart(prev => {
-      const existing = prev.find(p => p.id === product.id);
-      if (existing) {
-        return prev.map(p =>
-          p.id === product.id ? { ...p, quantity: p.quantity + 1 } : p
-        );
-      }
-      return [...prev, { ...product, quantity: 1 }];
+  async function openProduct(product) {
+    setSelectedProduct(product);
+    setShowModal(true);
+    setSelectedColorId(null);
+    setSelectedSizeId(null);
+    setVariantsLoading(true);
+    const { data, error } = await supabase
+      .from('stock')
+      .select('quantity, colors(id, name, hex_code), sizes(id, name)')
+      .eq('product_id', product.id)
+      .gt('quantity', 0);
+    if (error) console.error('Erro ao buscar variantes:', error);
+    setVariants(data || []);
+    setVariantsLoading(false);
+  }
+
+  const availableColors = useMemo(() => {
+    const map = new Map();
+    variants.forEach(v => {
+      if (v.colors && !map.has(v.colors.id)) map.set(v.colors.id, v.colors);
     });
+    return Array.from(map.values());
+  }, [variants]);
+
+  const availableSizesForColor = useMemo(() => {
+    return variants.filter(v => v.colors?.id === selectedColorId);
+  }, [variants, selectedColorId]);
+
+  const addVariantToCart = () => {
+    const variant = availableSizesForColor.find(v => v.sizes?.id === selectedSizeId);
+    if (!selectedProduct || !variant) return;
+    const cartKey = `${selectedProduct.id}:${selectedColorId}:${selectedSizeId}`;
+    setCart(prev => {
+      const existing = prev.find(p => p.cartKey === cartKey);
+      if (existing) {
+        return prev.map(p => (p.cartKey === cartKey ? { ...p, quantity: p.quantity + 1 } : p));
+      }
+      return [...prev, {
+        cartKey,
+        id: selectedProduct.id,
+        name: selectedProduct.name,
+        price: selectedProduct.price,
+        colorName: variant.colors.name,
+        sizeName: variant.sizes.name,
+        quantity: 1,
+      }];
+    });
+    setShowModal(false);
   };
 
-  const updateQuantity = (id, newQty) => {
+  const updateQuantity = (cartKey, newQty) => {
     if (newQty < 1) {
-      removeFromCart(id);
+      removeFromCart(cartKey);
       return;
     }
     setCart(prev =>
-      prev.map(item => (item.id === id ? { ...item, quantity: newQty } : item))
+      prev.map(item => (item.cartKey === cartKey ? { ...item, quantity: newQty } : item))
     );
   };
 
-  const removeFromCart = (id) => {
-    setCart(prev => prev.filter(item => item.id !== id));
+  const removeFromCart = (cartKey) => {
+    setCart(prev => prev.filter(item => item.cartKey !== cartKey));
   };
 
   const handleCheckout = (e) => {
@@ -191,17 +139,25 @@ export default function Home() {
       {/* Header */}
       <header className="bg-white shadow-md p-4 flex justify-between items-center">
         <h1 className="text-2xl md:text-3xl font-bold text-gray-800">Minha Loja</h1>
-        <button
-          onClick={() => setShowCart(true)}
-          className="relative bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors flex items-center gap-2"
-        >
-          🛒 Carrinho
-          {cartItemCount > 0 && (
-            <span className="absolute -top-2 -right-2 bg-red-500 text-xs px-2 py-1 rounded-full">
-              {cartItemCount}
-            </span>
-          )}
-        </button>
+        <div className="flex items-center gap-3">
+          <a
+            href="/admin"
+            className="bg-gray-800 text-white px-4 py-2 rounded-lg hover:bg-gray-900 transition-colors flex items-center gap-2"
+          >
+            📊 Painel
+          </a>
+          <button
+            onClick={() => setShowCart(true)}
+            className="relative bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors flex items-center gap-2"
+          >
+            🛒 Carrinho
+            {cartItemCount > 0 && (
+              <span className="absolute -top-2 -right-2 bg-red-500 text-xs px-2 py-1 rounded-full">
+                {cartItemCount}
+              </span>
+            )}
+          </button>
+        </div>
       </header>
 
       <div className="flex flex-col lg:flex-row gap-6 p-4 lg:p-8 max-w-7xl mx-auto">
@@ -253,16 +209,19 @@ export default function Home() {
                 <div
                   key={product.id}
                   className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-shadow cursor-pointer"
-                  onClick={() => {
-                    setSelectedProduct(product);
-                    setShowModal(true);
-                  }}
+                  onClick={() => openProduct(product)}
                 >
-                  <img
-                    src={product.image}
-                    alt={product.name}
-                    className="w-full h-48 object-cover"
-                  />
+                  {product.image ? (
+                    <img
+                      src={product.image}
+                      alt={product.name}
+                      className="w-full h-48 object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-48 bg-gray-200 flex items-center justify-center text-gray-400 text-sm">
+                      Sem foto
+                    </div>
+                  )}
                   <div className="p-4">
                     <h3 className="font-semibold text-lg mb-1 text-gray-800">{product.name}</h3>
                     <p className="text-2xl font-bold text-blue-600 mb-3">
@@ -271,11 +230,11 @@ export default function Home() {
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        addToCart(product);
+                        openProduct(product);
                       }}
                       className="w-full bg-green-500 text-white py-2 px-4 rounded-md hover:bg-green-600 transition-colors font-medium"
                     >
-                      Adicionar ao Carrinho
+                      Escolher cor e tamanho
                     </button>
                   </div>
                 </div>
@@ -300,22 +259,69 @@ export default function Home() {
             className="bg-white rounded-lg p-8 max-w-md w-full max-h-[90vh] overflow-y-auto shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
-            <img
-              src={selectedProduct.image}
-              alt={selectedProduct.name}
-              className="w-full h-64 object-cover rounded-lg mb-4"
-            />
+            {selectedProduct.image ? (
+              <img
+                src={selectedProduct.image}
+                alt={selectedProduct.name}
+                className="w-full h-64 object-cover rounded-lg mb-4"
+              />
+            ) : (
+              <div className="w-full h-64 bg-gray-200 rounded-lg mb-4 flex items-center justify-center text-gray-400 text-sm">
+                Sem foto
+              </div>
+            )}
             <h2 className="text-2xl font-bold mb-2 text-gray-800">{selectedProduct.name}</h2>
             <p className="text-gray-600 mb-4">{selectedProduct.description}</p>
             <p className="text-3xl font-bold text-blue-600 mb-6">
               R$ {selectedProduct.price.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
             </p>
+
+            {variantsLoading ? (
+              <p className="text-sm text-gray-500 mb-4">Carregando cores e tamanhos...</p>
+            ) : availableColors.length === 0 ? (
+              <p className="text-sm text-red-500 mb-4">Sem estoque disponível no momento.</p>
+            ) : (
+              <>
+                <div className="mb-4">
+                  <label className="block text-sm font-medium mb-2 text-gray-700">Cor</label>
+                  <div className="flex flex-wrap gap-2">
+                    {availableColors.map(color => (
+                      <button
+                        key={color.id}
+                        type="button"
+                        onClick={() => { setSelectedColorId(color.id); setSelectedSizeId(null); }}
+                        title={color.name}
+                        className={`w-9 h-9 rounded-full border-2 ${selectedColorId === color.id ? 'border-blue-500' : 'border-gray-300'}`}
+                        style={{ backgroundColor: color.hex_code || '#ccc' }}
+                      />
+                    ))}
+                  </div>
+                </div>
+
+                {selectedColorId && (
+                  <div className="mb-6">
+                    <label className="block text-sm font-medium mb-2 text-gray-700">Tamanho</label>
+                    <div className="flex flex-wrap gap-2">
+                      {availableSizesForColor.map(v => (
+                        <button
+                          key={v.sizes.id}
+                          type="button"
+                          onClick={() => setSelectedSizeId(v.sizes.id)}
+                          className={`px-4 py-2 rounded-md border font-medium ${selectedSizeId === v.sizes.id ? 'bg-blue-500 text-white border-blue-500' : 'bg-white text-gray-700 border-gray-300'}`}
+                        >
+                          {v.sizes.name}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+
             <button
-              onClick={() => {
-                addToCart(selectedProduct);
-                setShowModal(false);
-              }}
-              className="w-full bg-green-500 text-white py-3 px-6 rounded-md hover:bg-green-600 transition-colors font-bold mb-3"
+              onClick={addVariantToCart}
+              disabled={!selectedColorId || !selectedSizeId}
+              className="w-full bg-green-500 text-white py-3 px-6 rounded-md hover:bg-green-600 transition-colors font-bold mb-3 disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed"
             >
               Adicionar ao Carrinho
             </button>
@@ -345,21 +351,21 @@ export default function Home() {
             ) : (
               <div className="space-y-4 mb-6">
                 {cart.map((item) => (
-                  <div key={item.id} className="flex justify-between items-center p-4 bg-gray-50 rounded-lg">
+                  <div key={item.cartKey} className="flex justify-between items-center p-4 bg-gray-50 rounded-lg">
                     <div className="flex-1">
                       <h4 className="font-semibold text-gray-800">{item.name}</h4>
-                      <p className="text-sm text-gray-600">R$ {item.price.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
+                      <p className="text-sm text-gray-600">{item.colorName} · {item.sizeName} · R$ {item.price.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
                     </div>
                     <div className="flex items-center gap-3 ml-4">
                       <button
-                        onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                        onClick={() => updateQuantity(item.cartKey, item.quantity - 1)}
                         className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center hover:bg-gray-300"
                       >
                         -
                       </button>
                       <span className="font-semibold w-8 text-center">{item.quantity}</span>
                       <button
-                        onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                        onClick={() => updateQuantity(item.cartKey, item.quantity + 1)}
                         className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center hover:bg-gray-300"
                       >
                         +
@@ -368,7 +374,7 @@ export default function Home() {
                         R$ {(item.price * item.quantity).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                       </span>
                       <button
-                        onClick={() => removeFromCart(item.id)}
+                        onClick={() => removeFromCart(item.cartKey)}
                         className="ml-4 text-red-500 hover:text-red-700 font-semibold"
                       >
                         Remover
